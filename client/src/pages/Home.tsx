@@ -700,9 +700,33 @@ export default function Home() {
 
               {/* Error / Warning */}
               {error && (
-                <div className="mb-4 rounded-2xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-200 flex items-center gap-2">
-                  <Icon name="lucide:alert-circle" size={15} />
-                  {error}
+                <div className="mb-4 rounded-2xl border border-rose-500/30 bg-rose-500/10 px-4 py-4 text-sm text-rose-200">
+                  <div className="flex items-start gap-2">
+                    <Icon name="lucide:alert-circle" size={15} className="shrink-0 mt-0.5" />
+                    <div>
+                      <div className="font-semibold mb-1">{error}</div>
+                      {error.includes('餘額不足') && (
+                        <a
+                          href="https://platform.deepseek.com"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-xs text-rose-300 hover:text-rose-100 underline underline-offset-2 transition-colors"
+                        >
+                          <Icon name="lucide:external-link" size={11} />
+                          前往 DeepSeek 平台充值
+                        </a>
+                      )}
+                      {error.includes('API Key') && (
+                        <button
+                          onClick={() => setShowSettings(true)}
+                          className="inline-flex items-center gap-1 text-xs text-rose-300 hover:text-rose-100 underline underline-offset-2 transition-colors"
+                        >
+                          <Icon name="lucide:settings" size={11} />
+                          重新設定 API Key
+                        </button>
+                      )}
+                    </div>
+                  </div>
                 </div>
               )}
               {!apiKey && (
