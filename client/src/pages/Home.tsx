@@ -84,6 +84,7 @@ export default function Home() {
   const [financeCategory, setFinanceCategory] = useState('equities');
   const [timeframe, setTimeframe] = useState('24h');
   const [itemCount, setItemCount] = useState(10);
+  const [detailLevel, setDetailLevel] = useState<'brief' | 'standard' | 'deep'>('standard');
   const [analysisRaw, setAnalysisRaw] = useState<{ intel: string; finance: string }>({ intel: '', finance: '' });
   const [executiveBriefing, setExecutiveBriefing] = useState('');
   const [entityGraph, setEntityGraph] = useState('');
@@ -185,11 +186,24 @@ export default function Home() {
       }).replace(/\//g, '-');
       const isTravelCategory = appMode === 'intel' && intelCategory === 'travel';
       const dateContext = `今天日期是 ${todayStr}。`;
+
+      // Detail level word-count specs
+      const wordSpec = {
+        brief:    { main: '25-40', analysis: '20-30', impact: '15-25', market: '25-40', futures: '15-25' },
+        standard: { main: '50-70', analysis: '50-70', impact: '40-60', market: '50-70', futures: '30-50' },
+        deep:     { main: '100-150', analysis: '100-150', impact: '80-120', market: '100-150', futures: '60-100' },
+      }[detailLevel];
+      const depthNote = detailLevel === 'brief'
+        ? '請使用簡報模式，每則內容精簡扈要。'
+        : detailLevel === 'deep'
+        ? '請使用深度分析模式，每則提供詳盡的背景、因果連鎖與多面向影響分析。'
+        : '請使用標準模式。';
+
       const prompt = appMode === 'intel'
         ? isTravelCategory
-          ? `${dateContext}你是一名資深旅遊情報分析師。請以繁體中文針對「${currentCountryLabel}」整理屬於「${currentTimeframeLabel}」視角的 ${itemCount} 則旅遊資訊。【刊報日期】必須填寫 ${todayStr} 或近期實際日期，不得使用過舊日期。\n嚴格格式：\n1. 標題\n【刊報日期】：${todayStr}\n【可信度】：1-100\n【主體】：約 50-70 字，涵蓋景點、交通、住宿、美食、節慶或旅遊安全\n【旅遊建議】：約 40-60 字，實用的行程或注意事項\n【影響】：約 30-50 字，對旅遊計畫的影響\n【出處】：媒體、旅遊局或研判來源\n【連結】：若無法確認真實網址則填寫 N/A\n最後加上【整體旅遊評估】：內容，包含安全等級與推薦季節。`
-          : `${dateContext}你是一名資深地緣戰略情報官。請以繁體中文針對「${currentCountryLabel}」的「${currentIntelCategoryLabel}」整理屬於「${currentTimeframeLabel}」視角的 ${itemCount} 則情報。【刊報日期】必須填寫 ${todayStr} 或近期實際日期，不得使用過舊日期。\n嚴格格式：\n1. 標題\n【刊報日期】：${todayStr}\n【可信度】：1-100\n【主體】：約 50-70 字\n【分析】：約 50-70 字\n【影響】：約 40-60 字\n【出處】：媒體、機構或研判來源\n【連結】：若無法確認真實網址則填寫 N/A\n最後加上【總體戰略研判】：內容。`
-        : `${dateContext}你是一名宏觀市場策略師。請以繁體中文針對「${currentFinanceCategoryLabel}」整理屬於「${currentTimeframeLabel}」視角的 ${itemCount} 則市場動態。【刊報日期】必須填寫 ${todayStr} 或近期實際日期，不得使用過舊日期。\n嚴格格式：\n1. 標題\n【最新報價】：當前估算數字與漲跌幅\n【資產標的】：具體標的名稱\n【趨勢判定】：看多 / 看空 / 震盪\n【市場分析】：約 50-70 字\n【關鍵點位】：一句話\n【期貨動向】：約 30-50 字\n【出處】：媒體、機構或研判來源\n【連結】：若無法確認真實網址則填寫 N/A\n最後加上【總體資金流向研判】：內容。`;
+          ? `${dateContext}${depthNote}你是一名資深旅遊情報分析師。請以繁體中文針對「${currentCountryLabel}」整理屬於「${currentTimeframeLabel}」視角的 ${itemCount} 則旅遊資訊。【刊報日期】必須填寫 ${todayStr} 或近期實際日期，不得使用過舊日期。\n嚴格格式：\n1. 標題\n【刊報日期】：${todayStr}\n【可信度】：1-100\n【主體】：約 ${wordSpec.main} 字，涵蓋景點、交通、住宿、美食、節慶或旅遊安全\n【旅遊建議】：約 ${wordSpec.analysis} 字，實用的行程或注意事項\n【影響】：約 ${wordSpec.impact} 字，對旅遊計畫的影響\n【出處】：媒體、旅遊局或研判來源\n【連結】：若無法確認真實網址則填寫 N/A\n最後加上【整體旅遊評估】：內容，包含安全等級與推薦季節。`
+          : `${dateContext}${depthNote}你是一名資深地緣戰略情報官。請以繁體中文針對「${currentCountryLabel}」的「${currentIntelCategoryLabel}」整理屬於「${currentTimeframeLabel}」視角的 ${itemCount} 則情報。【刊報日期】必須填寫 ${todayStr} 或近期實際日期，不得使用過舊日期。\n嚴格格式：\n1. 標題\n【刊報日期】：${todayStr}\n【可信度】：1-100\n【主體】：約 ${wordSpec.main} 字\n【分析】：約 ${wordSpec.analysis} 字\n【影響】：約 ${wordSpec.impact} 字\n【出處】：媒體、機構或研判來源\n【連結】：若無法確認真實網址則填寫 N/A\n最後加上【總體戰略研判】：內容。`
+        : `${dateContext}${depthNote}你是一名宏觀市場策略師。請以繁體中文針對「${currentFinanceCategoryLabel}」整理屬於「${currentTimeframeLabel}」視角的 ${itemCount} 則市場動態。【刊報日期】必須填寫 ${todayStr} 或近期實際日期，不得使用過舊日期。\n嚴格格式：\n1. 標題\n【最新報價】：當前估算數字與漲跌幅\n【資產標的】：具體標的名稱\n【趨勢判定】：看多 / 看空 / 震盪\n【市場分析】：約 ${wordSpec.market} 字\n【關鍵點位】：一句話\n【期貨動向】：約 ${wordSpec.futures} 字\n【出處】：媒體、機構或研判來源\n【連結】：若無法確認真實網址則填寫 N/A\n最後加上【總體資金流向研判】：內容。`;
       const text = await callDeepSeek(apiKey, [
         { role: 'system', content: `你是專業終端機引擎，必須嚴格依照格式輸出，不要使用 Markdown 表格。今天日期是 ${todayStr}，所有【刊報日期】必須使用 ${todayStr} 或近期實際日期，不得使用過舊日期。` },
         { role: 'user', content: prompt }
@@ -202,10 +216,10 @@ export default function Home() {
     } finally {
       setLoading(false);
     }
-  }, [apiKey, appMode, currentCountryLabel, currentIntelCategoryLabel, currentFinanceCategoryLabel, currentTimeframeLabel, itemCount]);
+  }, [apiKey, appMode, currentCountryLabel, currentIntelCategoryLabel, currentFinanceCategoryLabel, currentTimeframeLabel, itemCount, detailLevel]);
 
   useEffect(() => { if (apiKey) loadEmergencyItems(); }, [apiKey]);
-  useEffect(() => { if (apiKey) loadAnalysis(); }, [apiKey, appMode, selectedCountry, intelCategory, financeCategory, timeframe, itemCount]);
+  useEffect(() => { if (apiKey) loadAnalysis(); }, [apiKey, appMode, selectedCountry, intelCategory, financeCategory, timeframe, itemCount, detailLevel]);
   useEffect(() => { if (apiKey && appMode === 'finance') loadQuotes(); }, [apiKey, appMode, financeCategory]);
 
   const runExecutiveBriefing = async () => {
@@ -512,6 +526,31 @@ export default function Home() {
                     )}
                   >
                     {n} 則
+                  </button>
+                ))}
+              </div>
+
+              {/* Detail Level */}
+              <div className="text-[11px] uppercase tracking-[0.24em] text-slate-500 mb-3" style={{ fontFamily: 'var(--font-mono)' }}>詳細程度</div>
+              <div className="grid grid-cols-3 gap-2 mb-5">
+                {([
+                  { id: 'brief', label: '簡報', hint: '~50字' },
+                  { id: 'standard', label: '標準', hint: '~100字' },
+                  { id: 'deep', label: '深度', hint: '~200字' },
+                ] as const).map(d => (
+                  <button
+                    key={d.id}
+                    onClick={() => setDetailLevel(d.id)}
+                    title={d.hint}
+                    className={cn(
+                      'rounded-xl px-2 py-2 text-xs border transition-all duration-150 flex flex-col items-center gap-0.5',
+                      detailLevel === d.id
+                        ? 'border-violet-500/40 bg-violet-500/10 text-violet-200'
+                        : 'border-slate-800 bg-slate-950/50 text-slate-400 hover:border-slate-700'
+                    )}
+                  >
+                    <span>{d.label}</span>
+                    <span className="text-[10px] opacity-60">{d.hint}</span>
                   </button>
                 ))}
               </div>
