@@ -83,6 +83,7 @@ export default function Home() {
   const [intelCategory, setIntelCategory] = useState('local');
   const [financeCategory, setFinanceCategory] = useState('equities');
   const [timeframe, setTimeframe] = useState('24h');
+  const [itemCount, setItemCount] = useState(10);
   const [analysisRaw, setAnalysisRaw] = useState<{ intel: string; finance: string }>({ intel: '', finance: '' });
   const [executiveBriefing, setExecutiveBriefing] = useState('');
   const [entityGraph, setEntityGraph] = useState('');
@@ -186,9 +187,9 @@ export default function Home() {
       const dateContext = `今天日期是 ${todayStr}。`;
       const prompt = appMode === 'intel'
         ? isTravelCategory
-          ? `${dateContext}你是一名資深旅遊情報分析師。請以繁體中文針對「${currentCountryLabel}」整理屬於「${currentTimeframeLabel}」視角的 8 則旅遊資訊。【刊報日期】必須填寫 ${todayStr} 或近期實際日期，不得使用過舊日期。\n嚴格格式：\n1. 標題\n【刊報日期】：${todayStr}\n【可信度】：1-100\n【主體】：約 50-70 字，涵蓋景點、交通、住宿、美食、節慶或旅遊安全\n【旅遊建議】：約 40-60 字，實用的行程或注意事項\n【影響】：約 30-50 字，對旅遊計畫的影響\n【出處】：媒體、旅遊局或研判來源\n【連結】：若無法確認真實網址則填寫 N/A\n最後加上【整體旅遊評估】：內容，包含安全等級與推薦季節。`
-          : `${dateContext}你是一名資深地緣戰略情報官。請以繁體中文針對「${currentCountryLabel}」的「${currentIntelCategoryLabel}」整理屬於「${currentTimeframeLabel}」視角的 8 則情報。【刊報日期】必須填寫 ${todayStr} 或近期實際日期，不得使用過舊日期。\n嚴格格式：\n1. 標題\n【刊報日期】：${todayStr}\n【可信度】：1-100\n【主體】：約 50-70 字\n【分析】：約 50-70 字\n【影響】：約 40-60 字\n【出處】：媒體、機構或研判來源\n【連結】：若無法確認真實網址則填寫 N/A\n最後加上【總體戰略研判】：內容。`
-        : `${dateContext}你是一名宏觀市場策略師。請以繁體中文針對「${currentFinanceCategoryLabel}」整理屬於「${currentTimeframeLabel}」視角的 8 則市場動態。【刊報日期】必須填寫 ${todayStr} 或近期實際日期，不得使用過舊日期。\n嚴格格式：\n1. 標題\n【最新報價】：當前估算數字與漲跌幅\n【資產標的】：具體標的名稱\n【趨勢判定】：看多 / 看空 / 震盪\n【市場分析】：約 50-70 字\n【關鍵點位】：一句話\n【期貨動向】：約 30-50 字\n【出處】：媒體、機構或研判來源\n【連結】：若無法確認真實網址則填寫 N/A\n最後加上【總體資金流向研判】：內容。`;
+          ? `${dateContext}你是一名資深旅遊情報分析師。請以繁體中文針對「${currentCountryLabel}」整理屬於「${currentTimeframeLabel}」視角的 ${itemCount} 則旅遊資訊。【刊報日期】必須填寫 ${todayStr} 或近期實際日期，不得使用過舊日期。\n嚴格格式：\n1. 標題\n【刊報日期】：${todayStr}\n【可信度】：1-100\n【主體】：約 50-70 字，涵蓋景點、交通、住宿、美食、節慶或旅遊安全\n【旅遊建議】：約 40-60 字，實用的行程或注意事項\n【影響】：約 30-50 字，對旅遊計畫的影響\n【出處】：媒體、旅遊局或研判來源\n【連結】：若無法確認真實網址則填寫 N/A\n最後加上【整體旅遊評估】：內容，包含安全等級與推薦季節。`
+          : `${dateContext}你是一名資深地緣戰略情報官。請以繁體中文針對「${currentCountryLabel}」的「${currentIntelCategoryLabel}」整理屬於「${currentTimeframeLabel}」視角的 ${itemCount} 則情報。【刊報日期】必須填寫 ${todayStr} 或近期實際日期，不得使用過舊日期。\n嚴格格式：\n1. 標題\n【刊報日期】：${todayStr}\n【可信度】：1-100\n【主體】：約 50-70 字\n【分析】：約 50-70 字\n【影響】：約 40-60 字\n【出處】：媒體、機構或研判來源\n【連結】：若無法確認真實網址則填寫 N/A\n最後加上【總體戰略研判】：內容。`
+        : `${dateContext}你是一名宏觀市場策略師。請以繁體中文針對「${currentFinanceCategoryLabel}」整理屬於「${currentTimeframeLabel}」視角的 ${itemCount} 則市場動態。【刊報日期】必須填寫 ${todayStr} 或近期實際日期，不得使用過舊日期。\n嚴格格式：\n1. 標題\n【最新報價】：當前估算數字與漲跌幅\n【資產標的】：具體標的名稱\n【趨勢判定】：看多 / 看空 / 震盪\n【市場分析】：約 50-70 字\n【關鍵點位】：一句話\n【期貨動向】：約 30-50 字\n【出處】：媒體、機構或研判來源\n【連結】：若無法確認真實網址則填寫 N/A\n最後加上【總體資金流向研判】：內容。`;
       const text = await callDeepSeek(apiKey, [
         { role: 'system', content: `你是專業終端機引擎，必須嚴格依照格式輸出，不要使用 Markdown 表格。今天日期是 ${todayStr}，所有【刊報日期】必須使用 ${todayStr} 或近期實際日期，不得使用過舊日期。` },
         { role: 'user', content: prompt }
@@ -201,10 +202,10 @@ export default function Home() {
     } finally {
       setLoading(false);
     }
-  }, [apiKey, appMode, currentCountryLabel, currentIntelCategoryLabel, currentFinanceCategoryLabel, currentTimeframeLabel]);
+  }, [apiKey, appMode, currentCountryLabel, currentIntelCategoryLabel, currentFinanceCategoryLabel, currentTimeframeLabel, itemCount]);
 
   useEffect(() => { if (apiKey) loadEmergencyItems(); }, [apiKey]);
-  useEffect(() => { if (apiKey) loadAnalysis(); }, [apiKey, appMode, selectedCountry, intelCategory, financeCategory, timeframe]);
+  useEffect(() => { if (apiKey) loadAnalysis(); }, [apiKey, appMode, selectedCountry, intelCategory, financeCategory, timeframe, itemCount]);
   useEffect(() => { if (apiKey && appMode === 'finance') loadQuotes(); }, [apiKey, appMode, financeCategory]);
 
   const runExecutiveBriefing = async () => {
@@ -492,6 +493,25 @@ export default function Home() {
                     )}
                   >
                     {tf.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Item Count */}
+              <div className="text-[11px] uppercase tracking-[0.24em] text-slate-500 mb-3" style={{ fontFamily: 'var(--font-mono)' }}>分析筆數</div>
+              <div className="grid grid-cols-3 gap-2 mb-5">
+                {[10, 15, 20].map(n => (
+                  <button
+                    key={n}
+                    onClick={() => setItemCount(n)}
+                    className={cn(
+                      'rounded-xl px-3 py-2 text-xs border transition-all duration-150',
+                      itemCount === n
+                        ? 'border-cyan-500/40 bg-cyan-500/10 text-cyan-200'
+                        : 'border-slate-800 bg-slate-950/50 text-slate-400 hover:border-slate-700'
+                    )}
+                  >
+                    {n} 則
                   </button>
                 ))}
               </div>
