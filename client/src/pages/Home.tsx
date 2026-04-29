@@ -177,14 +177,19 @@ export default function Home() {
     setEntityGraph('');
     setItemAnalyses({});
     try {
+      // Inject today's date so the AI anchors its output to the current date
+      const todayStr = new Date().toLocaleDateString('zh-TW', {
+        year: 'numeric', month: '2-digit', day: '2-digit', timeZone: 'Asia/Taipei'
+      }).replace(/\//g, '-');
       const isTravelCategory = appMode === 'intel' && intelCategory === 'travel';
+      const dateContext = `今天日期是 ${todayStr}。`;
       const prompt = appMode === 'intel'
         ? isTravelCategory
-          ? `你是一名資深旅遊情報分析師。請以繁體中文針對「${currentCountryLabel}」整理屬於「${currentTimeframeLabel}」視角的 8 則旅遊資訊。\n嚴格格式：\n1. 標題\n【刊報日期】：YYYY-MM-DD 或 近期\n【可信度】：1-100\n【主體】：約 50-70 字，涵蓋景點、交通、住宿、美食、節慶或旅遊安全\n【旅遊建議】：約 40-60 字，實用的行程或注意事項\n【影響】：約 30-50 字，對旅遊計畫的影響\n【出處】：媒體、旅遊局或研判來源\n【連結】：若無法確認真實網址則填寫 N/A\n最後加上【整體旅遊評估】：內容，包含安全等級與推薦季節。`
-          : `你是一名資深地緣戰略情報官。請以繁體中文針對「${currentCountryLabel}」的「${currentIntelCategoryLabel}」整理屬於「${currentTimeframeLabel}」視角的 8 則情報。\n嚴格格式：\n1. 標題\n【刊報日期】：YYYY-MM-DD 或 近期\n【可信度】：1-100\n【主體】：約 50-70 字\n【分析】：約 50-70 字\n【影響】：約 40-60 字\n【出處】：媒體、機構或研判來源\n【連結】：若無法確認真實網址則填寫 N/A\n最後加上【總體戰略研判】：內容。`
-        : `你是一名宏觀市場策略師。請以繁體中文針對「${currentFinanceCategoryLabel}」整理屬於「${currentTimeframeLabel}」視角的 8 則市場動態。\n嚴格格式：\n1. 標題\n【最新報價】：當前估算數字與漲跌幅\n【資產標的】：具體標的名稱\n【趨勢判定】：看多 / 看空 / 震盪\n【市場分析】：約 50-70 字\n【關鍵點位】：一句話\n【期貨動向】：約 30-50 字\n【出處】：媒體、機構或研判來源\n【連結】：若無法確認真實網址則填寫 N/A\n最後加上【總體資金流向研判】：內容。`;
+          ? `${dateContext}你是一名資深旅遊情報分析師。請以繁體中文針對「${currentCountryLabel}」整理屬於「${currentTimeframeLabel}」視角的 8 則旅遊資訊。【刊報日期】必須填寫 ${todayStr} 或近期實際日期，不得使用過舊日期。\n嚴格格式：\n1. 標題\n【刊報日期】：${todayStr}\n【可信度】：1-100\n【主體】：約 50-70 字，涵蓋景點、交通、住宿、美食、節慶或旅遊安全\n【旅遊建議】：約 40-60 字，實用的行程或注意事項\n【影響】：約 30-50 字，對旅遊計畫的影響\n【出處】：媒體、旅遊局或研判來源\n【連結】：若無法確認真實網址則填寫 N/A\n最後加上【整體旅遊評估】：內容，包含安全等級與推薦季節。`
+          : `${dateContext}你是一名資深地緣戰略情報官。請以繁體中文針對「${currentCountryLabel}」的「${currentIntelCategoryLabel}」整理屬於「${currentTimeframeLabel}」視角的 8 則情報。【刊報日期】必須填寫 ${todayStr} 或近期實際日期，不得使用過舊日期。\n嚴格格式：\n1. 標題\n【刊報日期】：${todayStr}\n【可信度】：1-100\n【主體】：約 50-70 字\n【分析】：約 50-70 字\n【影響】：約 40-60 字\n【出處】：媒體、機構或研判來源\n【連結】：若無法確認真實網址則填寫 N/A\n最後加上【總體戰略研判】：內容。`
+        : `${dateContext}你是一名宏觀市場策略師。請以繁體中文針對「${currentFinanceCategoryLabel}」整理屬於「${currentTimeframeLabel}」視角的 8 則市場動態。【刊報日期】必須填寫 ${todayStr} 或近期實際日期，不得使用過舊日期。\n嚴格格式：\n1. 標題\n【最新報價】：當前估算數字與漲跌幅\n【資產標的】：具體標的名稱\n【趨勢判定】：看多 / 看空 / 震盪\n【市場分析】：約 50-70 字\n【關鍵點位】：一句話\n【期貨動向】：約 30-50 字\n【出處】：媒體、機構或研判來源\n【連結】：若無法確認真實網址則填寫 N/A\n最後加上【總體資金流向研判】：內容。`;
       const text = await callDeepSeek(apiKey, [
-        { role: 'system', content: '你是專業終端機引擎，必須嚴格依照格式輸出，不要使用 Markdown 表格。' },
+        { role: 'system', content: `你是專業終端機引擎，必須嚴格依照格式輸出，不要使用 Markdown 表格。今天日期是 ${todayStr}，所有【刊報日期】必須使用 ${todayStr} 或近期實際日期，不得使用過舊日期。` },
         { role: 'user', content: prompt }
       ], 0.35);
       setAnalysisRaw(prev => ({ ...prev, [appMode]: text }));
@@ -667,7 +672,12 @@ export default function Home() {
             <section className="glass border border-slate-800 rounded-3xl p-4 md:p-5">
               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-5">
                 <div>
-                  <div className="text-[11px] uppercase tracking-[0.24em] text-slate-500" style={{ fontFamily: 'var(--font-mono)' }}>分析主面板</div>
+                  <div className="flex items-center gap-3">
+                    <div className="text-[11px] uppercase tracking-[0.24em] text-slate-500" style={{ fontFamily: 'var(--font-mono)' }}>分析主面板</div>
+                    <div className="text-[11px] text-amber-400/70 border border-amber-500/20 bg-amber-500/5 rounded-full px-2 py-0.5" style={{ fontFamily: 'var(--font-mono)' }}>
+                      AI 研判 · {new Date().toLocaleDateString('zh-TW', { year: 'numeric', month: '2-digit', day: '2-digit', timeZone: 'Asia/Taipei' })}
+                    </div>
+                  </div>
                   <h2 className="text-xl md:text-2xl font-black text-white mt-1" style={{ fontFamily: 'var(--font-display)' }}>
                     {appMode === 'intel' ? `${currentCountryLabel} · ${currentIntelCategoryLabel}` : currentFinanceCategoryLabel}
                   </h2>
