@@ -75,8 +75,21 @@ export const IntelContent = ({ content, mode }: IntelContentProps) => {
   }
 
   const data = parseFinanceContent(content);
+  const now = new Date();
+  const financeDate = now.toLocaleDateString('zh-TW', { year: 'numeric', month: '2-digit', day: '2-digit', timeZone: 'Asia/Taipei' });
+  const financeTime = now.toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false, timeZone: 'Asia/Taipei' });
   return (
     <div className="space-y-4 text-sm">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div className="rounded-xl bg-slate-950/60 border border-cyan-500/20 p-3">
+          <div className="text-[11px] uppercase tracking-[0.22em] text-cyan-300 mb-2" style={{ fontFamily: 'var(--font-mono)' }}>刷新日期</div>
+          <div className="text-slate-200 font-medium">{financeDate}</div>
+        </div>
+        <div className="rounded-xl bg-slate-950/60 border border-cyan-500/20 p-3">
+          <div className="text-[11px] uppercase tracking-[0.22em] text-cyan-300 mb-2" style={{ fontFamily: 'var(--font-mono)' }}>刷新時間</div>
+          <div className="text-cyan-300 font-bold" style={{ fontFamily: 'var(--font-mono)' }}>{financeTime}</div>
+        </div>
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <FieldBlock label="最新報價" value={data.price} accent="cyan" />
         <FieldBlock label="資產標的" value={data.asset} accent="amber" />

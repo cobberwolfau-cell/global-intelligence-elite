@@ -112,11 +112,33 @@ export default function Home() {
   const [chatLoading, setChatLoading] = useState(false);
   const [itemAnalyses, setItemAnalyses] = useState<Record<string, ItemAnalysis>>({});
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [quotesLastUpdated, setQuotesLastUpdated] = useState<Date | null>(null);
+  const [autoRefreshCountdown, setAutoRefreshCountdown] = useState(300); // 5 min in seconds
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const autoRefreshRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Clock
+  // ─── Market Session Helper ─────────────────────────────
+  const getMarketSession = (date: Date) => {
+    const utcHour = date.getUTCHours();
+    // Asia: 00:00-09:00 UTC (Tokyo/HK/Shanghai 08:00-17:00)
+    if (utcHour >= 0 && utcHour < 9) return { label: '亞洲盤', color: 'text-amber-400', dot: 'bg-amber-400' };
+    // Europe: 07:00-16:00 UTC (London 08:00-17:00 BST)
+    if (utcHour >= 7 && utcHour < 16) return { label: '歐洲盤', color: 'text-blue-400', dot: 'bg-blue-400' };
+    // Americas: 13:30-21:00 UTC (NYSE 09:30-17:00 ET)
+    if (utcHour >= 13 && utcHour < 21) return { label: '美洲盤', color: 'text-emerald-400', dot: 'bg-emerald-400' };
+    return { label: '收盤時段', color: 'text-slate-500', dot: 'bg-slate-500' };
+  };
+
+  // Clock + auto-refresh countdown
   useEffect(() => {
-    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+      // Countdown for auto-refresh (only in finance mode)
+      setAutoRefreshCountdown(prev => {
+        if (prev <= 1) return 300; // reset
+        return prev - 1;
+      });
+    }, 1000);
     return () => clearInterval(timer);
   }, []);
 
@@ -171,6 +193,8 @@ export default function Home() {
       ], 0.2);
       const data = safeJSON(text, []);
       setMarketQuotes(Array.isArray(data) ? (data as MarketQuote[]).slice(0, 6) : []);
+      setQuotesLastUpdated(new Date());
+      setAutoRefreshCountdown(300); // reset countdown after refresh
     } catch {
       setMarketQuotes([]);
     } finally {
@@ -228,6 +252,13 @@ export default function Home() {
   useEffect(() => { if (apiKey) loadEmergencyItems(); }, [apiKey]);
   useEffect(() => { if (apiKey) loadAnalysis(); }, [apiKey, appMode, selectedCountry, intelCategory, financeCategory, timeframe, itemCount, detailLevel]);
   useEffect(() => { if (apiKey && appMode === 'finance') loadQuotes(); }, [apiKey, appMode, financeCategory]);
+
+  // Auto-refresh quotes every 5 minutes in finance mode
+  useEffect(() => {
+    if (appMode === 'finance' && apiKey && autoRefreshCountdown === 1) {
+      loadQuotes();
+    }
+  }, [autoRefreshCountdown, appMode, apiKey, loadQuotes]);
 
   const runExecutiveBriefing = async () => {
     if (!currentRaw) return;
@@ -878,18 +909,53 @@ export default function Home() {
             {/* Market Snapshot (Finance mode) */}
             {appMode === 'finance' && (
               <section className="glass border border-slate-800 rounded-3xl p-4 md:p-5">
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <div className="text-[11px] uppercase tracking-[0.24em] text-slate-500" style={{ fontFamily: 'var(--font-mono)' }}>市場快照</div>
-                    <div className="text-lg font-bold text-white mt-1" style={{ fontFamily: 'var(--font-display)' }}>{currentFinanceCategoryLabel}</div>
+                {/* Finance Header Bar */}
+                <div className="flex flex-col gap-3 mb-4">
+                  {/* Top row: title + refresh */}
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <div className="text-[11px] uppercase tracking-[0.24em] text-slate-500" style={{ fontFamily: 'var(--font-mono)' }}>市場快照</div>
+                      <div className="text-lg font-bold text-white mt-1" style={{ fontFamily: 'var(--font-display)' }}>{currentFinanceCategoryLabel}</div>
+                    </div>
+                    <button
+                      onClick={loadQuotes}
+                      disabled={quotesLoading}
+                      className="text-sm text-cyan-300 hover:text-cyan-200 disabled:opacity-50 transition-colors flex items-center gap-1.5 shrink-0"
+                    >
+                      <Icon name={quotesLoading ? 'lucide:loader-2' : 'lucide:refresh-cw'} size={13} className={quotesLoading ? 'animate-spin' : ''} />
+                      刷新快照
+                    </button>
                   </div>
-                  <button
-                    onClick={loadQuotes}
-                    className="text-sm text-cyan-300 hover:text-cyan-200 transition-colors flex items-center gap-1.5"
-                  >
-                    <Icon name="lucide:refresh-cw" size={13} />
-                    刷新快照
-                  </button>
+                  {/* Bottom row: live clock, market session, last updated, countdown */}
+                  <div className="flex flex-wrap items-center gap-3 text-[11px]" style={{ fontFamily: 'var(--font-mono)' }}>
+                    {/* Live clock */}
+                    <div className="flex items-center gap-1.5 text-cyan-300">
+                      <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse inline-block" />
+                      {currentTime.toLocaleString('zh-TW', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false, timeZone: 'Asia/Taipei' })}
+                    </div>
+                    {/* Market session */}
+                    {(() => {
+                      const session = getMarketSession(currentTime);
+                      return (
+                        <div className={`flex items-center gap-1.5 ${session.color}`}>
+                          <span className={`w-1.5 h-1.5 rounded-full ${session.dot} inline-block`} />
+                          {session.label}
+                        </div>
+                      );
+                    })()}
+                    {/* Last updated */}
+                    {quotesLastUpdated && (
+                      <div className="text-slate-500">
+                        上次更新：{quotesLastUpdated.toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false, timeZone: 'Asia/Taipei' })}
+                      </div>
+                    )}
+                    {/* Auto-refresh countdown */}
+                    {apiKey && (
+                      <div className="text-slate-600">
+                        自動刷新：{Math.floor(autoRefreshCountdown / 60).toString().padStart(2, '0')}:{(autoRefreshCountdown % 60).toString().padStart(2, '0')}
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
                   {quotesLoading
@@ -899,7 +965,14 @@ export default function Home() {
                     : marketQuotes.length
                       ? marketQuotes.map((q, idx) => (
                           <div key={idx} className="rounded-2xl p-4 border border-slate-800 bg-slate-950/50 hover:border-slate-700 transition-colors">
-                            <div className="text-xs uppercase tracking-[0.18em] text-slate-500" style={{ fontFamily: 'var(--font-mono)' }}>{q.symbol}</div>
+                            <div className="flex items-start justify-between">
+                              <div className="text-xs uppercase tracking-[0.18em] text-slate-500" style={{ fontFamily: 'var(--font-mono)' }}>{q.symbol}</div>
+                              {quotesLastUpdated && (
+                                <div className="text-[10px] text-slate-600" style={{ fontFamily: 'var(--font-mono)' }}>
+                                  {quotesLastUpdated.toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Asia/Taipei' })}
+                                </div>
+                              )}
+                            </div>
                             <div className="text-xl font-black text-white mt-2" style={{ fontFamily: 'var(--font-display)' }}>{q.price}</div>
                             <div className={cn(
                               'text-sm mt-2 flex items-center gap-1.5',
@@ -926,7 +999,12 @@ export default function Home() {
                   <div className="flex items-center gap-3">
                     <div className="text-[11px] uppercase tracking-[0.24em] text-slate-500" style={{ fontFamily: 'var(--font-mono)' }}>分析主面板</div>
                     <div className="text-[11px] text-amber-400/70 border border-amber-500/20 bg-amber-500/5 rounded-full px-2 py-0.5" style={{ fontFamily: 'var(--font-mono)' }}>
-                      AI 研判 · {new Date().toLocaleDateString('zh-TW', { year: 'numeric', month: '2-digit', day: '2-digit', timeZone: 'Asia/Taipei' })}
+                      AI 研判 · {currentTime.toLocaleDateString('zh-TW', { year: 'numeric', month: '2-digit', day: '2-digit', timeZone: 'Asia/Taipei' })}
+                      {appMode === 'finance' && (
+                        <span className="ml-1 text-cyan-400/70">
+                          {currentTime.toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false, timeZone: 'Asia/Taipei' })}
+                        </span>
+                      )}
                     </div>
                   </div>
                   <h2 className="text-xl md:text-2xl font-black text-white mt-1" style={{ fontFamily: 'var(--font-display)' }}>
