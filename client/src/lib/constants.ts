@@ -43,6 +43,7 @@ export const intelCategories: Category[] = [
   { id: 'military', label: '軍事動態', icon: 'lucide:shield' },
   { id: 'technology', label: '科技前沿', icon: 'lucide:cpu' },
   { id: 'risk', label: '風險雷達', icon: 'lucide:siren' },
+  { id: 'travel', label: '旅遊資訊', icon: 'lucide:plane' },
 ];
 
 export const financeCategories: Category[] = [

@@ -177,8 +177,11 @@ export default function Home() {
     setEntityGraph('');
     setItemAnalyses({});
     try {
+      const isTravelCategory = appMode === 'intel' && intelCategory === 'travel';
       const prompt = appMode === 'intel'
-        ? `你是一名資深地緣戰略情報官。請以繁體中文針對「${currentCountryLabel}」的「${currentIntelCategoryLabel}」整理屬於「${currentTimeframeLabel}」視角的 8 則情報。\n嚴格格式：\n1. 標題\n【刊報日期】：YYYY-MM-DD 或 近期\n【可信度】：1-100\n【主體】：約 50-70 字\n【分析】：約 50-70 字\n【影響】：約 40-60 字\n【出處】：媒體、機構或研判來源\n【連結】：若無法確認真實網址則填寫 N/A\n最後加上【總體戰略研判】：內容。`
+        ? isTravelCategory
+          ? `你是一名資深旅遊情報分析師。請以繁體中文針對「${currentCountryLabel}」整理屬於「${currentTimeframeLabel}」視角的 8 則旅遊資訊。\n嚴格格式：\n1. 標題\n【刊報日期】：YYYY-MM-DD 或 近期\n【可信度】：1-100\n【主體】：約 50-70 字，涵蓋景點、交通、住宿、美食、節慶或旅遊安全\n【旅遊建議】：約 40-60 字，實用的行程或注意事項\n【影響】：約 30-50 字，對旅遊計畫的影響\n【出處】：媒體、旅遊局或研判來源\n【連結】：若無法確認真實網址則填寫 N/A\n最後加上【整體旅遊評估】：內容，包含安全等級與推薦季節。`
+          : `你是一名資深地緣戰略情報官。請以繁體中文針對「${currentCountryLabel}」的「${currentIntelCategoryLabel}」整理屬於「${currentTimeframeLabel}」視角的 8 則情報。\n嚴格格式：\n1. 標題\n【刊報日期】：YYYY-MM-DD 或 近期\n【可信度】：1-100\n【主體】：約 50-70 字\n【分析】：約 50-70 字\n【影響】：約 40-60 字\n【出處】：媒體、機構或研判來源\n【連結】：若無法確認真實網址則填寫 N/A\n最後加上【總體戰略研判】：內容。`
         : `你是一名宏觀市場策略師。請以繁體中文針對「${currentFinanceCategoryLabel}」整理屬於「${currentTimeframeLabel}」視角的 8 則市場動態。\n嚴格格式：\n1. 標題\n【最新報價】：當前估算數字與漲跌幅\n【資產標的】：具體標的名稱\n【趨勢判定】：看多 / 看空 / 震盪\n【市場分析】：約 50-70 字\n【關鍵點位】：一句話\n【期貨動向】：約 30-50 字\n【出處】：媒體、機構或研判來源\n【連結】：若無法確認真實網址則填寫 N/A\n最後加上【總體資金流向研判】：內容。`;
       const text = await callDeepSeek(apiKey, [
         { role: 'system', content: '你是專業終端機引擎，必須嚴格依照格式輸出，不要使用 Markdown 表格。' },
