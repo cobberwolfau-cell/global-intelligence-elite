@@ -77,6 +77,7 @@ export default function Home() {
   const [showSettings, setShowSettings] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [activeContinent, setActiveContinent] = useState('asia');
   const [selectedCountry, setSelectedCountry] = useState('Taiwan');
   const [intelCategory, setIntelCategory] = useState('local');
@@ -193,6 +194,7 @@ export default function Home() {
         { role: 'user', content: prompt }
       ], 0.35);
       setAnalysisRaw(prev => ({ ...prev, [appMode]: text }));
+      setLastUpdated(new Date());
     } catch (e) {
       setError((e as Error).message || '分析失敗');
       setAnalysisRaw(prev => ({ ...prev, [appMode]: '' }));
@@ -363,15 +365,22 @@ export default function Home() {
                   </span>
                 ) : '設定 API Key'}
               </button>
-              <button
-                onClick={loadAnalysis}
-                className="px-4 py-3 rounded-2xl border border-indigo-500/30 bg-indigo-500/15 hover:bg-indigo-500/20 transition-all duration-150 text-sm font-semibold text-indigo-200"
-              >
-                <span className="flex items-center gap-2">
-                  <Icon name="lucide:refresh-cw" size={14} />
-                  重新掃描
-                </span>
-              </button>
+              <div className="flex flex-col gap-1">
+                <button
+                  onClick={loadAnalysis}
+                  className="px-4 py-3 rounded-2xl border border-indigo-500/30 bg-indigo-500/15 hover:bg-indigo-500/20 transition-all duration-150 text-sm font-semibold text-indigo-200"
+                >
+                  <span className="flex items-center gap-2">
+                    <Icon name="lucide:refresh-cw" size={14} />
+                    重新掃描
+                  </span>
+                </button>
+                {lastUpdated && (
+                  <div className="text-[11px] text-slate-500 text-center" style={{ fontFamily: 'var(--font-mono)' }}>
+                    上次更新：{lastUpdated.toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false, timeZone: 'Asia/Taipei' })}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
