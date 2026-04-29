@@ -37,6 +37,14 @@ const friendlyErrorMessage = (status: number, body: string): string => {
   return `API 錯誤 ${status}，請稍後再試。`;
 };
 
+// Marker to identify non-retryable errors thrown by this module
+class NonRetryableError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'NonRetryableError';
+  }
+}
+
 const fetchWithRetry = async (url: string, options: RequestInit, maxRetries = 3): Promise<Response> => {
   let lastError: Error | null = null;
   let delay = 1000;
@@ -46,10 +54,11 @@ const fetchWithRetry = async (url: string, options: RequestInit, maxRetries = 3)
       if (!response.ok) {
         const text = await response.text();
         const friendly = friendlyErrorMessage(response.status, text);
-        const err = new Error(friendly);
-        // Do not retry on client-side / billing errors
-        if (NON_RETRYABLE_STATUSES.has(response.status)) throw err;
-        lastError = err;
+        // Do not retry on client-side / billing errors — throw immediately
+        if (NON_RETRYABLE_STATUSES.has(response.status)) {
+          throw new NonRetryableError(friendly);
+        }
+        lastError = new Error(friendly);
         if (i < maxRetries - 1) {
           await new Promise(r => setTimeout(r, delay));
           delay *= 2;
@@ -58,10 +67,8 @@ const fetchWithRetry = async (url: string, options: RequestInit, maxRetries = 3)
       }
       return response;
     } catch (e) {
-      // Re-throw immediately if it's already a friendly non-retryable error
-      if ((e as Error).message && !((e as Error).message.startsWith('API 錯誤') || (e as Error).message.includes('fetch'))) {
-        throw e;
-      }
+      // Always re-throw NonRetryableError immediately without retrying
+      if (e instanceof NonRetryableError) throw e;
       lastError = e as Error;
       if (i < maxRetries - 1) {
         await new Promise(r => setTimeout(r, delay));

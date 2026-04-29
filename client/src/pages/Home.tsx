@@ -771,9 +771,13 @@ export default function Home() {
 
                         return (
                           <article key={item.id} className="rounded-2xl border border-slate-800 bg-slate-950/55 overflow-hidden hover:border-slate-700 transition-colors">
-                            <button
+                            {/* Use div instead of button to avoid nested <button> DOM violation */}
+                            <div
+                              role="button"
+                              tabIndex={0}
                               onClick={() => setExpandedId(expanded ? null : item.id)}
-                              className="w-full px-4 md:px-5 py-4 text-left flex items-start justify-between gap-4 hover:bg-slate-900/40 transition-colors"
+                              onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setExpandedId(expanded ? null : item.id); } }}
+                              className="w-full px-4 md:px-5 py-4 text-left flex items-start justify-between gap-4 hover:bg-slate-900/40 transition-colors cursor-pointer"
                             >
                               <div className="min-w-0">
                                 <div className="flex items-center gap-2 mb-2">
@@ -810,7 +814,7 @@ export default function Home() {
                                   size={18}
                                 />
                               </div>
-                            </button>
+                            </div>
 
                             {expanded && (
                               <div className="px-4 md:px-5 pb-5 border-t border-slate-800 pt-4 space-y-4 fade-in-up">
