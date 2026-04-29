@@ -117,6 +117,36 @@ export default function Home() {
   const chatEndRef = useRef<HTMLDivElement>(null);
   const autoRefreshRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  // ─── Market Open Alert Helper ─────────────────────────
+  // Returns alert info if within 5 minutes before a session opens
+  const getMarketOpenAlert = (date: Date): { label: string; color: string; border: string; bg: string; icon: string } | null => {
+    const utcHour = date.getUTCHours();
+    const utcMin = date.getUTCMinutes();
+    const totalMins = utcHour * 60 + utcMin;
+
+    // Asia opens at 00:00 UTC → warn from 23:55 UTC (prev day) to 00:05 UTC
+    const asiaOpen = 0 * 60; // 00:00 UTC
+    const euroOpen = 7 * 60; // 07:00 UTC (London)
+    const usOpen   = 13 * 60 + 30; // 13:30 UTC (NYSE)
+
+    const sessions = [
+      { open: asiaOpen, label: '亞洲盤', color: 'text-amber-300', border: 'border-amber-500/40', bg: 'bg-amber-500/10', icon: 'lucide:sunrise' },
+      { open: euroOpen, label: '歐洲盤', color: 'text-blue-300', border: 'border-blue-500/40', bg: 'bg-blue-500/10', icon: 'lucide:building-2' },
+      { open: usOpen,   label: '美洲盤', color: 'text-emerald-300', border: 'border-emerald-500/40', bg: 'bg-emerald-500/10', icon: 'lucide:landmark' },
+    ];
+
+    for (const s of sessions) {
+      // Handle midnight wrap-around for Asia (23:55–24:00 = 1435–1440)
+      const diff = s.open === 0
+        ? (totalMins >= 1435 ? 1440 - totalMins : s.open - totalMins)
+        : s.open - totalMins;
+      if (diff >= 0 && diff <= 5) {
+        return { label: s.label, color: s.color, border: s.border, bg: s.bg, icon: s.icon };
+      }
+    }
+    return null;
+  };
+
   // ─── Market Session Helper ─────────────────────────────
   const getMarketSession = (date: Date) => {
     const utcHour = date.getUTCHours();
@@ -492,6 +522,44 @@ export default function Home() {
               </div>
             </div>
           )}
+
+          {/* Market Open Alert (Finance mode: 5 min before session open) */}
+          {appMode === 'finance' && (() => {
+            const alert = getMarketOpenAlert(currentTime);
+            if (!alert) return null;
+            const minsLeft = (() => {
+              const utcHour = currentTime.getUTCHours();
+              const utcMin = currentTime.getUTCMinutes();
+              const totalMins = utcHour * 60 + utcMin;
+              const opens = [0, 7 * 60, 13 * 60 + 30];
+              for (const open of opens) {
+                const diff = open === 0
+                  ? (totalMins >= 1435 ? 1440 - totalMins : open - totalMins)
+                  : open - totalMins;
+                if (diff >= 0 && diff <= 5) return diff;
+              }
+              return 0;
+            })();
+            return (
+              <div className={`mt-4 rounded-2xl border ${alert.border} ${alert.bg} overflow-hidden animate-pulse`}>
+                <div className="flex items-center gap-3 px-4 py-3">
+                  <div className={`flex items-center gap-2 ${alert.color}`}>
+                    <Icon name={alert.icon} size={16} className="shrink-0" />
+                    <span className="text-xs uppercase tracking-[0.28em] font-bold" style={{ fontFamily: 'var(--font-mono)' }}>
+                      即將開盤警報
+                    </span>
+                  </div>
+                  <div className={`flex-1 text-sm font-semibold ${alert.color}`}>
+                    {alert.label}即將開盤！剩餘 <span className="text-white font-black">{minsLeft}</span> 分鐘
+                  </div>
+                  <div className="text-[11px] text-slate-400" style={{ fontFamily: 'var(--font-mono)' }}>
+                    {currentTime.toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false, timeZone: 'Asia/Taipei' })}
+                  </div>
+                  <div className={`w-2 h-2 rounded-full ${alert.border.replace('border-', 'bg-').replace('/40', '')} animate-ping`} />
+                </div>
+              </div>
+            );
+          })()}
 
           {/* Emergency Ticker */}
           <div className="mt-5 rounded-2xl border border-rose-500/20 bg-rose-500/5 overflow-hidden">
