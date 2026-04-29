@@ -12,6 +12,7 @@ import { continents, countryNodes, intelCategories, financeCategories, timeframe
 import type { AppMode, MarketQuote, EmergencyItem, ChatMessage, ItemAnalysis, ParsedItem } from '@/lib/types';
 import MarkdownLines from '@/components/MarkdownLines';
 import IntelContent from '@/components/IntelContent';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 
 // ─── Icon wrapper ──────────────────────────────────────────
 const Icon = ({ name, className = '', size = 18 }: { name: string; className?: string; size?: number }) => {
@@ -72,6 +73,12 @@ const ToolbarButton = ({
 // ─── Main App ──────────────────────────────────────────────
 export default function Home() {
   const [appMode, setAppMode] = useState<AppMode>('intel');
+  const [viewMode, setViewMode] = useState<'desktop' | 'mobile'>(() => {
+    // Auto-detect based on screen width on first load
+    return typeof window !== 'undefined' && window.innerWidth < 768 ? 'mobile' : 'desktop';
+  });
+  const [showLeftPanel, setShowLeftPanel] = useState(false);
+  const [showRightPanel, setShowRightPanel] = useState(false);
   const [apiKeyInput, setApiKeyInput] = useState(readStoredKey());
   const [apiKey, setApiKey] = useState(readStoredKey());
   const [showSettings, setShowSettings] = useState(false);
@@ -380,6 +387,36 @@ export default function Home() {
                   </span>
                 ) : '設定 API Key'}
               </button>
+              {/* View Mode Toggle */}
+              <div className="flex rounded-2xl border border-slate-700 bg-slate-950/60 overflow-hidden">
+                <button
+                  onClick={() => setViewMode('desktop')}
+                  className={cn(
+                    'flex items-center gap-1.5 px-3 py-2.5 text-xs font-semibold transition-all duration-150',
+                    viewMode === 'desktop'
+                      ? 'bg-indigo-500/20 text-indigo-200 border-r border-indigo-500/30'
+                      : 'text-slate-400 hover:text-slate-200 border-r border-slate-700'
+                  )}
+                  title="網頁版"
+                >
+                  <Icon name="lucide:monitor" size={13} />
+                  <span className="hidden sm:inline">網頁版</span>
+                </button>
+                <button
+                  onClick={() => setViewMode('mobile')}
+                  className={cn(
+                    'flex items-center gap-1.5 px-3 py-2.5 text-xs font-semibold transition-all duration-150',
+                    viewMode === 'mobile'
+                      ? 'bg-cyan-500/20 text-cyan-200'
+                      : 'text-slate-400 hover:text-slate-200'
+                  )}
+                  title="手機版"
+                >
+                  <Icon name="lucide:smartphone" size={13} />
+                  <span className="hidden sm:inline">手機版</span>
+                </button>
+              </div>
+
               <div className="flex flex-col gap-1">
                 <button
                   onClick={loadAnalysis}
@@ -453,10 +490,156 @@ export default function Home() {
         </header>
 
         {/* ─── Main Grid ──────────────────────────────── */}
-        <div className="grid grid-cols-1 xl:grid-cols-[320px_minmax(0,1fr)_360px] gap-6">
+        {/* ─── Mobile Bottom Navigation Bar ─────────────── */}
+        {viewMode === 'mobile' && (
+          <div className="fixed bottom-0 left-0 right-0 z-50 flex items-center justify-around border-t border-slate-800 bg-slate-950/95 backdrop-blur-xl px-4 py-3 shadow-2xl shadow-slate-950">
+            <Sheet open={showLeftPanel} onOpenChange={setShowLeftPanel}>
+              <SheetTrigger asChild>
+                <button className="flex flex-col items-center gap-1 text-slate-400 hover:text-indigo-300 transition-colors">
+                  <Icon name="lucide:sliders-horizontal" size={20} />
+                  <span className="text-[10px]" style={{ fontFamily: 'var(--font-mono)' }}>控制面板</span>
+                </button>
+              </SheetTrigger>
+              <SheetContent side="left" className="w-[85vw] max-w-[340px] bg-slate-950 border-slate-800 p-0 overflow-y-auto custom-scrollbar">
+                <SheetHeader className="px-4 pt-5 pb-3 border-b border-slate-800">
+                  <SheetTitle className="text-sm font-semibold text-slate-200" style={{ fontFamily: 'var(--font-display)' }}>控制面板</SheetTitle>
+                </SheetHeader>
+                <div className="p-4">
+                  <div className="glass border border-slate-800 rounded-3xl p-4">
+                    {/* Mode Toggle */}
+                    <div className="grid grid-cols-2 gap-3 mb-5">
+                      <button onClick={() => setAppMode('intel')} className={cn('rounded-2xl px-4 py-3 border text-sm font-semibold transition-all duration-150', appMode === 'intel' ? 'bg-indigo-500/15 border-indigo-500/40 text-white' : 'bg-slate-950/50 border-slate-800 text-slate-400')} style={{ fontFamily: 'var(--font-display)' }}><span className="flex items-center justify-center gap-2"><Icon name="lucide:shield" size={14} />情報模式</span></button>
+                      <button onClick={() => setAppMode('finance')} className={cn('rounded-2xl px-4 py-3 border text-sm font-semibold transition-all duration-150', appMode === 'finance' ? 'bg-cyan-500/15 border-cyan-500/40 text-white' : 'bg-slate-950/50 border-slate-800 text-slate-400')} style={{ fontFamily: 'var(--font-display)' }}><span className="flex items-center justify-center gap-2"><Icon name="lucide:line-chart" size={14} />金融模式</span></button>
+                    </div>
+                    {/* Timeframe */}
+                    <div className="text-[11px] uppercase tracking-[0.24em] text-slate-500 mb-3" style={{ fontFamily: 'var(--font-mono)' }}>時間維度</div>
+                    <div className="grid grid-cols-3 gap-2 mb-5">
+                      {timeframes.map(tf => (<button key={tf.id} onClick={() => setTimeframe(tf.id)} className={cn('rounded-xl px-3 py-2 text-xs border transition-all duration-150', timeframe === tf.id ? 'border-indigo-500/40 bg-indigo-500/10 text-indigo-200' : 'border-slate-800 bg-slate-950/50 text-slate-400')}>{tf.label}</button>))}
+                    </div>
+                    {/* Item Count */}
+                    <div className="text-[11px] uppercase tracking-[0.24em] text-slate-500 mb-3" style={{ fontFamily: 'var(--font-mono)' }}>分析筆數</div>
+                    <div className="grid grid-cols-3 gap-2 mb-5">
+                      {[10, 15, 20].map(n => (<button key={n} onClick={() => setItemCount(n)} className={cn('rounded-xl px-3 py-2 text-xs border transition-all duration-150', itemCount === n ? 'border-cyan-500/40 bg-cyan-500/10 text-cyan-200' : 'border-slate-800 bg-slate-950/50 text-slate-400')}>{n} 則</button>))}
+                    </div>
+                    {/* Detail Level */}
+                    <div className="text-[11px] uppercase tracking-[0.24em] text-slate-500 mb-3" style={{ fontFamily: 'var(--font-mono)' }}>詳細程度</div>
+                    <div className="grid grid-cols-3 gap-2 mb-5">
+                      {([{id:'brief',label:'簡報',hint:'~50字'},{id:'standard',label:'標準',hint:'~100字'},{id:'deep',label:'深度',hint:'~200字'}] as const).map(d => (<button key={d.id} onClick={() => setDetailLevel(d.id)} className={cn('rounded-xl px-2 py-2 text-xs border transition-all duration-150 flex flex-col items-center gap-0.5', detailLevel === d.id ? 'border-violet-500/40 bg-violet-500/10 text-violet-200' : 'border-slate-800 bg-slate-950/50 text-slate-400')}><span>{d.label}</span><span className="text-[10px] opacity-60">{d.hint}</span></button>))}
+                    </div>
+                    {appMode === 'intel' ? (
+                      <>
+                        <div className="text-[11px] uppercase tracking-[0.24em] text-slate-500 mb-3" style={{ fontFamily: 'var(--font-mono)' }}>大洲部署</div>
+                        <div className="grid grid-cols-2 gap-2 mb-5">
+                          {continents.map(continent => (<button key={continent.id} onClick={() => { setActiveContinent(continent.id); const first = countryNodes.find(c => c.continent === continent.id); if (first) setSelectedCountry(first.id); }} className={cn('rounded-xl px-3 py-2 text-xs border transition-all duration-150', activeContinent === continent.id ? 'border-indigo-500/40 bg-indigo-500/10 text-indigo-200' : 'border-slate-800 bg-slate-950/50 text-slate-400')}>{continent.label}</button>))}
+                        </div>
+                        <div className="text-[11px] uppercase tracking-[0.24em] text-slate-500 mb-3" style={{ fontFamily: 'var(--font-mono)' }}>節點目標</div>
+                        <div className="grid grid-cols-2 gap-2 mb-5">
+                          {filteredCountries.map(country => (<button key={country.id} onClick={() => setSelectedCountry(country.id)} className={cn('rounded-xl px-3 py-2 text-xs border transition-all duration-150 text-left', selectedCountry === country.id ? 'border-indigo-500/40 bg-indigo-500/10 text-indigo-200' : 'border-slate-800 bg-slate-950/50 text-slate-400')}>{country.label}</button>))}
+                        </div>
+                        <div className="text-[11px] uppercase tracking-[0.24em] text-slate-500 mb-3" style={{ fontFamily: 'var(--font-mono)' }}>情報頻道</div>
+                        <div className="space-y-2">
+                          {intelCategories.map(item => (<ToolbarButton key={item.id} active={intelCategory === item.id} icon={item.icon} onClick={() => setIntelCategory(item.id)}>{item.label}</ToolbarButton>))}
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="text-[11px] uppercase tracking-[0.24em] text-slate-500 mb-3" style={{ fontFamily: 'var(--font-mono)' }}>市場頻道</div>
+                        <div className="space-y-2">
+                          {financeCategories.map(item => (<ToolbarButton key={item.id} active={financeCategory === item.id} icon={item.icon} onClick={() => setFinanceCategory(item.id)}>{item.label}</ToolbarButton>))}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                  {/* Watchlist */}
+                  <div className="glass border border-slate-800 rounded-3xl p-4 mt-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="text-[11px] uppercase tracking-[0.24em] text-slate-500" style={{ fontFamily: 'var(--font-mono)' }}>關注清單</div>
+                      <button onClick={() => setWatchOnly(v => !v)} className="text-xs text-indigo-300 hover:text-indigo-200 transition-colors">{watchOnly ? '顯示全部' : '只看已關注'}</button>
+                    </div>
+                    <div className="space-y-2 max-h-48 overflow-auto custom-scrollbar pr-1">
+                      {watchlist.length ? watchlist.map((title, idx) => (
+                        <div key={idx} className="rounded-xl border border-slate-800 bg-slate-950/50 px-3 py-2 text-sm text-slate-300 flex items-start justify-between gap-2">
+                          <span className="flex-1 text-xs leading-5">{title}</span>
+                          <button onClick={() => toggleWatch(title)} className="text-slate-600 hover:text-rose-400 transition-colors shrink-0 mt-0.5"><Icon name="lucide:x" size={12} /></button>
+                        </div>
+                      )) : <div className="text-sm text-slate-500">尚未加入任何項目。</div>}
+                    </div>
+                  </div>
+                </div>
+              </SheetContent>
+            </Sheet>
+
+            <button
+              onClick={loadAnalysis}
+              className="flex flex-col items-center gap-1 text-indigo-300 hover:text-indigo-100 transition-colors"
+            >
+              <Icon name={loading ? 'lucide:loader-2' : 'lucide:refresh-cw'} size={20} className={loading ? 'animate-spin' : ''} />
+              <span className="text-[10px]" style={{ fontFamily: 'var(--font-mono)' }}>重新掃描</span>
+            </button>
+
+            <Sheet open={showRightPanel} onOpenChange={setShowRightPanel}>
+              <SheetTrigger asChild>
+                <button className="flex flex-col items-center gap-1 text-slate-400 hover:text-cyan-300 transition-colors relative">
+                  <Icon name="lucide:message-square" size={20} />
+                  <span className="text-[10px]" style={{ fontFamily: 'var(--font-mono)' }}>對話助手</span>
+                  {chatHistory.length > 0 && (
+                    <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-indigo-500 text-[9px] text-white flex items-center justify-center">{chatHistory.length}</span>
+                  )}
+                </button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-[90vw] max-w-[400px] bg-slate-950 border-slate-800 p-0 flex flex-col">
+                <SheetHeader className="px-4 pt-5 pb-3 border-b border-slate-800 shrink-0">
+                  <SheetTitle className="text-sm font-semibold text-slate-200" style={{ fontFamily: 'var(--font-display)' }}>對話分析助手</SheetTitle>
+                </SheetHeader>
+                <div className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-3">
+                  {chatHistory.map((msg, idx) => (
+                    <div key={idx} className={cn('rounded-2xl px-4 py-3 text-sm leading-6', msg.role === 'user' ? 'bg-indigo-500/12 border border-indigo-500/25 text-indigo-100 ml-6' : 'bg-slate-900 border border-slate-800 text-slate-300 mr-6')}>{msg.text}</div>
+                  ))}
+                  {chatLoading && (
+                    <div className="rounded-2xl px-4 py-3 text-sm bg-slate-900 border border-slate-800 text-slate-400 mr-6 flex items-center gap-2">
+                      <Icon name="lucide:loader-2" size={13} className="animate-spin" />正在分析中...
+                    </div>
+                  )}
+                  <div ref={chatEndRef} />
+                </div>
+                <div className="shrink-0 p-3 border-t border-slate-800 flex gap-2">
+                  <input value={chatInput} onChange={e => setChatInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && sendChat()} placeholder="輸入問題…" className="flex-1 rounded-xl bg-slate-950 border border-slate-700 px-4 py-3 text-sm outline-none focus:border-indigo-500 text-slate-200 placeholder:text-slate-600 transition-colors" />
+                  <button onClick={sendChat} disabled={chatLoading || !apiKey} className="px-4 py-3 rounded-xl bg-indigo-500 hover:bg-indigo-400 disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold text-sm transition-colors">送出</button>
+                </div>
+                {/* Quick Stats */}
+                <div className="shrink-0 p-4 border-t border-slate-800 grid grid-cols-2 gap-3">
+                  <div className="rounded-xl border border-slate-800 bg-slate-950/50 p-3">
+                    <div className="text-[10px] text-slate-500 mb-1">關注項目</div>
+                    <div className="text-lg font-bold text-amber-400" style={{ fontFamily: 'var(--font-mono)' }}>{watchlist.length}</div>
+                  </div>
+                  <div className="rounded-xl border border-slate-800 bg-slate-950/50 p-3">
+                    <div className="text-[10px] text-slate-500 mb-1">當前分析</div>
+                    <div className="text-lg font-bold text-indigo-300" style={{ fontFamily: 'var(--font-mono)' }}>{parsed.items.length}</div>
+                  </div>
+                  <div className="rounded-xl border border-slate-800 bg-slate-950/50 p-3">
+                    <div className="text-[10px] text-slate-500 mb-1">高優先觀察</div>
+                    <div className="text-lg font-bold text-rose-400" style={{ fontFamily: 'var(--font-mono)' }}>{emergencyItems.length}</div>
+                  </div>
+                  <div className="rounded-xl border border-slate-800 bg-slate-950/50 p-3">
+                    <div className="text-[10px] text-slate-500 mb-1">對話記錄</div>
+                    <div className="text-lg font-bold text-emerald-400" style={{ fontFamily: 'var(--font-mono)' }}>{chatHistory.length}</div>
+                  </div>
+                </div>
+              </SheetContent>
+            </Sheet>
+          </div>
+        )}
+
+        <div className={cn(
+          'grid gap-6',
+          viewMode === 'desktop'
+            ? 'grid-cols-1 xl:grid-cols-[320px_minmax(0,1fr)_360px]'
+            : 'grid-cols-1',
+          viewMode === 'mobile' && 'pb-24'
+        )}>
 
           {/* ─── Left Sidebar ─────────────────────────── */}
-          <aside className="space-y-4">
+          <aside className={cn('space-y-4', viewMode === 'mobile' && 'hidden')}>
             <div className="glass border border-slate-800 rounded-3xl p-4">
               {/* Mode Toggle */}
               <div className="grid grid-cols-2 gap-3 mb-5">
@@ -970,7 +1153,7 @@ export default function Home() {
           </main>
 
           {/* ─── Right Sidebar ─────────────────────────── */}
-          <aside className="space-y-4 min-w-0">
+          <aside className={cn('space-y-4 min-w-0', viewMode === 'mobile' && 'hidden')}>
             {/* Chat Assistant */}
             <div className="glass border border-slate-800 rounded-3xl p-4">
               <div className="flex items-center gap-2 mb-3">
