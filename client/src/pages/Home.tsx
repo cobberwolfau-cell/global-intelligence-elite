@@ -6,7 +6,7 @@
 // ============================================================
 
 import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react';
-import { cn, formatDateTime, parseAnalysis, readStoredKey, safeJSON } from '@/lib/utils';
+import { cn, formatDateTime, parseAnalysis, safeJSON } from '@/lib/utils';
 import { callDeepSeek } from '@/lib/deepseek';
 import { continents, countryNodes, intelCategories, financeCategories, timeframes } from '@/lib/constants';
 import type { AppMode, MarketQuote, EmergencyItem, ChatMessage, ItemAnalysis, ParsedItem } from '@/lib/types';
@@ -79,9 +79,6 @@ export default function Home() {
   });
   const [showLeftPanel, setShowLeftPanel] = useState(false);
   const [showRightPanel, setShowRightPanel] = useState(false);
-  const [apiKeyInput, setApiKeyInput] = useState(readStoredKey());
-  const [apiKey, setApiKey] = useState(readStoredKey());
-  const [showSettings, setShowSettings] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
@@ -197,9 +194,8 @@ export default function Home() {
 
   // ─── API Calls ─────────────────────────────────────────
   const loadEmergencyItems = useCallback(async () => {
-    if (!apiKey) return;
     try {
-      const text = await callDeepSeek(apiKey, [
+      const text = await callDeepSeek('', [
         { role: 'system', content: '你負責輸出高密度風險摘要，內容需精煉、務實、不中斷格式。' },
         { role: 'user', content: '你是全球風險監控中心值班分析師。請以繁體中文輸出 5 則高優先級觀察，範圍可涵蓋地緣政治、金融市場、科技安全與供應鏈。\n格式必須如下：\n【標題】：...\n【摘要】：...\n每則僅兩行，不要加序號與其他說明。' },
       ], 0.5);
@@ -211,13 +207,13 @@ export default function Home() {
     } catch (e) {
       console.error(e);
     }
-  }, [apiKey]);
+  }, []);
 
   const loadQuotes = useCallback(async () => {
-    if (appMode !== 'finance' || !apiKey) return;
+    if (appMode !== 'finance') return;
     setQuotesLoading(true);
     try {
-      const text = await callDeepSeek(apiKey, [
+      const text = await callDeepSeek('', [
         { role: 'system', content: '你是金融市場終端機。請僅輸出 JSON。' },
         { role: 'user', content: `請為「${currentFinanceCategoryLabel}」輸出 6 個代表性資產的估算快照。\n只可輸出 JSON 陣列，每個元素格式為 {"symbol":"","price":"","change":"","trend":"up|down|flat"}。不得輸出 Markdown。` }
       ], 0.2);
@@ -230,10 +226,9 @@ export default function Home() {
     } finally {
       setQuotesLoading(false);
     }
-  }, [apiKey, appMode, currentFinanceCategoryLabel]);
+  }, [appMode, currentFinanceCategoryLabel]);
 
   const loadAnalysis = useCallback(async () => {
-    if (!apiKey) return;
     setLoading(true);
     setError('');
     setExpandedId(null);
@@ -265,7 +260,7 @@ export default function Home() {
           ? `${dateContext}${depthNote}你是一名資深旅遊情報分析師。請以繁體中文針對「${currentCountryLabel}」整理屬於「${currentTimeframeLabel}」視角的 ${itemCount} 則旅遊資訊。【刊報日期】必須填寫 ${todayStr} 或近期實際日期，不得使用過舊日期。\n嚴格格式：\n1. 標題\n【刊報日期】：${todayStr}\n【可信度】：1-100\n【主體】：約 ${wordSpec.main} 字，涵蓋景點、交通、住宿、美食、節慶或旅遊安全\n【旅遊建議】：約 ${wordSpec.analysis} 字，實用的行程或注意事項\n【影響】：約 ${wordSpec.impact} 字，對旅遊計畫的影響\n【出處】：媒體、旅遊局或研判來源\n【連結】：若無法確認真實網址則填寫 N/A\n最後加上【整體旅遊評估】：內容，包含安全等級與推薦季節。`
           : `${dateContext}${depthNote}你是一名資深地緣戰略情報官。請以繁體中文針對「${currentCountryLabel}」的「${currentIntelCategoryLabel}」整理屬於「${currentTimeframeLabel}」視角的 ${itemCount} 則情報。【刊報日期】必須填寫 ${todayStr} 或近期實際日期，不得使用過舊日期。\n嚴格格式：\n1. 標題\n【刊報日期】：${todayStr}\n【可信度】：1-100\n【主體】：約 ${wordSpec.main} 字\n【分析】：約 ${wordSpec.analysis} 字\n【影響】：約 ${wordSpec.impact} 字\n【出處】：媒體、機構或研判來源\n【連結】：若無法確認真實網址則填寫 N/A\n最後加上【總體戰略研判】：內容。`
         : `${dateContext}${depthNote}你是一名宏觀市場策略師。請以繁體中文針對「${currentFinanceCategoryLabel}」整理屬於「${currentTimeframeLabel}」視角的 ${itemCount} 則市場動態。【刊報日期】必須填寫 ${todayStr} 或近期實際日期，不得使用過舊日期。\n嚴格格式：\n1. 標題\n【最新報價】：當前估算數字與漲跌幅\n【資產標的】：具體標的名稱\n【趨勢判定】：看多 / 看空 / 震盪\n【市場分析】：約 ${wordSpec.market} 字\n【關鍵點位】：一句話\n【期貨動向】：約 ${wordSpec.futures} 字\n【出處】：媒體、機構或研判來源\n【連結】：若無法確認真實網址則填寫 N/A\n最後加上【總體資金流向研判】：內容。`;
-      const text = await callDeepSeek(apiKey, [
+      const text = await callDeepSeek('', [
         { role: 'system', content: `你是專業終端機引擎，必須嚴格依照格式輸出，不要使用 Markdown 表格。今天日期是 ${todayStr}，所有【刊報日期】必須使用 ${todayStr} 或近期實際日期，不得使用過舊日期。` },
         { role: 'user', content: prompt }
       ], 0.35);
@@ -277,24 +272,24 @@ export default function Home() {
     } finally {
       setLoading(false);
     }
-  }, [apiKey, appMode, currentCountryLabel, currentIntelCategoryLabel, currentFinanceCategoryLabel, currentTimeframeLabel, itemCount, detailLevel]);
+  }, [appMode, currentCountryLabel, currentIntelCategoryLabel, currentFinanceCategoryLabel, currentTimeframeLabel, itemCount, detailLevel]);
 
-  useEffect(() => { if (apiKey) loadEmergencyItems(); }, [apiKey]);
-  useEffect(() => { if (apiKey) loadAnalysis(); }, [apiKey, appMode, selectedCountry, intelCategory, financeCategory, timeframe, itemCount, detailLevel]);
-  useEffect(() => { if (apiKey && appMode === 'finance') loadQuotes(); }, [apiKey, appMode, financeCategory]);
+  useEffect(() => { loadEmergencyItems(); }, [loadEmergencyItems]);
+  useEffect(() => { loadAnalysis(); }, [loadAnalysis]);
+  useEffect(() => { loadQuotes(); }, [loadQuotes]);
 
   // Auto-refresh quotes every 5 minutes in finance mode
   useEffect(() => {
-    if (appMode === 'finance' && apiKey && autoRefreshCountdown === 1) {
+    if (appMode === 'finance' && autoRefreshCountdown === 1) {
       loadQuotes();
     }
-  }, [autoRefreshCountdown, appMode, apiKey, loadQuotes]);
+  }, [autoRefreshCountdown, appMode, loadQuotes]);
 
   const runExecutiveBriefing = async () => {
     if (!currentRaw) return;
     setBriefingLoading(true);
     try {
-      const text = await callDeepSeek(apiKey, [
+      const text = await callDeepSeek('', [
         { role: 'system', content: '你是高階主管簡報撰寫員。請短、狠、準。' },
         { role: 'user', content: `根據以下內容，產出 3 點核心洞察與 2 點行動建議。\n${currentRaw}` }
       ], 0.3);
@@ -310,7 +305,7 @@ export default function Home() {
     if (!currentRaw || appMode !== 'intel') return;
     setGraphLoading(true);
     try {
-      const text = await callDeepSeek(apiKey, [
+      const text = await callDeepSeek('', [
         { role: 'system', content: '你是關係網絡分析員。請用條列方式輸出。' },
         { role: 'user', content: `根據以下情報，整理 4 個最重要的實體，並分別說明其利益、依賴與衝突。\n${currentRaw}` }
       ], 0.35);
@@ -332,7 +327,7 @@ export default function Home() {
     if (type === 'blind') prompt = `你是一名 Red Team 分析師。請針對以下內容提出 3 個決策盲點或潛在風險。\n標題：${item.title}\n內容：${item.content}`;
     if (type === 'timeline') prompt = `請針對以下事件推演短期、中期、長期的可能演化。\n標題：${item.title}\n內容：${item.content}\n請以【短期】、【中期】、【長期】三段輸出。`;
     try {
-      const text = await callDeepSeek(apiKey, [
+      const text = await callDeepSeek('', [
         { role: 'system', content: '回應需結構化、短句化、決策導向。' },
         { role: 'user', content: prompt }
       ], 0.4);
@@ -350,7 +345,7 @@ export default function Home() {
     setChatLoading(true);
     try {
       const context = `${appMode === 'intel' ? '情報模式' : '金融模式'}\n${currentRaw || '目前沒有分析內容。'}`;
-      const text = await callDeepSeek(apiKey, [
+      const text = await callDeepSeek('', [
         { role: 'system', content: '你是終端機分析助理。僅根據提供的內容與合理推論回答，保持繁體中文、扼要且專業。' },
         { role: 'user', content: `背景資料：\n${context}\n\n使用者問題：${query}` }
       ], 0.35);
@@ -387,11 +382,6 @@ export default function Home() {
     URL.revokeObjectURL(link.href);
   };
 
-  const saveKey = () => {
-    localStorage.setItem('gie_deepseek_key', apiKeyInput.trim());
-    setApiKey(apiKeyInput.trim());
-    setShowSettings(false);
-  };
 
   const toggleWatch = (title: string) =>
     setWatchlist(prev => prev.includes(title) ? prev.filter(t => t !== title) : [...prev, title]);
@@ -437,17 +427,12 @@ export default function Home() {
                   {formatDateTime(currentTime)}
                 </div>
               </div>
-              <button
-                onClick={() => setShowSettings(v => !v)}
-                className="px-4 py-3 rounded-2xl border border-slate-700 bg-slate-950/60 hover:border-indigo-500/40 transition-all duration-150 text-sm font-semibold text-slate-200"
-              >
-                {apiKey ? (
-                  <span className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400 pulse-dot inline-block" />
-                    已配置 API Key
-                  </span>
-                ) : '設定 API Key'}
-              </button>
+              <div className="px-4 py-3 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 text-sm font-semibold text-emerald-200">
+                <span className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 pulse-dot inline-block" />
+                  系統已就緒
+                </span>
+              </div>
               {/* View Mode Toggle */}
               <div className="flex rounded-2xl border border-slate-700 bg-slate-950/60 overflow-hidden">
                 <button
@@ -497,31 +482,7 @@ export default function Home() {
             </div>
           </div>
 
-          {/* API Key Settings */}
-          {showSettings && (
-            <div className="mt-5 p-4 rounded-2xl border border-slate-800 bg-slate-950/65 fade-in-up">
-              <div className="text-sm font-semibold text-slate-200 mb-2" style={{ fontFamily: 'var(--font-display)' }}>DeepSeek API 設定</div>
-              <p className="text-xs text-slate-500 mb-3 leading-6">
-                你的 API Key 只會儲存在瀏覽器本地端 localStorage。請勿將金鑰寫入公開版本控制庫。
-              </p>
-              <div className="flex flex-col md:flex-row gap-3">
-                <input
-                  value={apiKeyInput}
-                  onChange={e => setApiKeyInput(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && saveKey()}
-                  placeholder="sk-xxxxxxxx"
-                  type="password"
-                  className="flex-1 rounded-xl bg-slate-900 border border-slate-700 px-4 py-3 text-sm outline-none focus:border-indigo-500 text-slate-200 placeholder:text-slate-600 transition-colors"
-                />
-                <button
-                  onClick={saveKey}
-                  className="px-5 py-3 rounded-xl bg-indigo-500 hover:bg-indigo-400 text-white font-semibold text-sm transition-colors"
-                >
-                  儲存
-                </button>
-              </div>
-            </div>
-          )}
+
 
           {/* Market Open Alert (Finance mode: 5 min before session open) */}
           {appMode === 'finance' && (() => {
@@ -581,7 +542,7 @@ export default function Home() {
                 </div>
               ) : (
                 <span className="text-slate-500">
-                  {apiKey ? '正在載入高優先級觀察...' : '請先設定 API Key 以啟用高優先級觀察。'}
+                  {'正在載入高優先級觀察...'}
                 </span>
               )}
             </div>
@@ -703,7 +664,7 @@ export default function Home() {
                 </div>
                 <div className="shrink-0 p-3 border-t border-slate-800 flex gap-2">
                   <input value={chatInput} onChange={e => setChatInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && sendChat()} placeholder="輸入問題…" className="flex-1 rounded-xl bg-slate-950 border border-slate-700 px-4 py-3 text-sm outline-none focus:border-indigo-500 text-slate-200 placeholder:text-slate-600 transition-colors" />
-                  <button onClick={sendChat} disabled={chatLoading || !apiKey} className="px-4 py-3 rounded-xl bg-indigo-500 hover:bg-indigo-400 disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold text-sm transition-colors">送出</button>
+                  <button onClick={sendChat} disabled={chatLoading} className="px-4 py-3 rounded-xl bg-indigo-500 hover:bg-indigo-400 disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold text-sm transition-colors">送出</button>
                 </div>
                 {/* Quick Stats */}
                 <div className="shrink-0 p-4 border-t border-slate-800 grid grid-cols-2 gap-3">
@@ -968,9 +929,9 @@ export default function Home() {
               />
               <MetricCard
                 title="系統狀態"
-                value={apiKey ? 'ONLINE' : 'LOCKED'}
-                hint={apiKey ? '已配置 API Key，可進行分析' : '尚未配置 API Key'}
-                accent={apiKey ? 'indigo' : 'rose'}
+                value="ONLINE"
+                hint="後端 API 已就緒"
+                accent="indigo"
               />
             </div>
 
@@ -1018,11 +979,9 @@ export default function Home() {
                       </div>
                     )}
                     {/* Auto-refresh countdown */}
-                    {apiKey && (
-                      <div className="text-slate-600">
-                        自動刷新：{Math.floor(autoRefreshCountdown / 60).toString().padStart(2, '0')}:{(autoRefreshCountdown % 60).toString().padStart(2, '0')}
-                      </div>
-                    )}
+                    <div className="text-slate-600">
+                      自動刷新：{Math.floor(autoRefreshCountdown / 60).toString().padStart(2, '0')}:{(autoRefreshCountdown % 60).toString().padStart(2, '0')}
+                    </div>
                   </div>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
@@ -1126,25 +1085,12 @@ export default function Home() {
                           前往 DeepSeek 平台充值
                         </a>
                       )}
-                      {error.includes('API Key') && (
-                        <button
-                          onClick={() => setShowSettings(true)}
-                          className="inline-flex items-center gap-1 text-xs text-rose-300 hover:text-rose-100 underline underline-offset-2 transition-colors"
-                        >
-                          <Icon name="lucide:settings" size={11} />
-                          重新設定 API Key
-                        </button>
-                      )}
+
                     </div>
                   </div>
                 </div>
               )}
-              {!apiKey && (
-                <div className="mb-4 rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-100 flex items-center gap-2">
-                  <Icon name="lucide:key" size={15} />
-                  請先在右上角輸入 DeepSeek API Key，否則無法呼叫 AI 功能。
-                </div>
-              )}
+
 
               {/* Executive Briefing */}
               {executiveBriefing && (
@@ -1282,7 +1228,7 @@ export default function Home() {
                       })
                     : (
                         <div className="rounded-2xl border border-slate-800 bg-slate-950/50 p-8 text-center text-slate-500">
-                          {apiKey ? '目前沒有可顯示的分析項目。' : '請先設定 API Key 以載入分析內容。'}
+                          {'目前沒有可顯示的分析項目。'}
                         </div>
                       )
                 }
@@ -1340,7 +1286,7 @@ export default function Home() {
                 />
                 <button
                   onClick={sendChat}
-                  disabled={chatLoading || !apiKey}
+                  disabled={chatLoading}
                   className="px-4 py-3 rounded-xl bg-indigo-500 hover:bg-indigo-400 disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold text-sm transition-colors"
                 >
                   送出
@@ -1359,11 +1305,11 @@ export default function Home() {
               <div className="space-y-3 text-sm text-slate-400 leading-7">
                 <div className="flex gap-3">
                   <span className="text-indigo-400 font-bold shrink-0" style={{ fontFamily: 'var(--font-mono)' }}>01</span>
-                  <p>先輸入並儲存你的 DeepSeek API Key。</p>
+                  <p>選擇情報模式或金融模式，系統將自動進行分析。</p>
                 </div>
                 <div className="flex gap-3">
                   <span className="text-indigo-400 font-bold shrink-0" style={{ fontFamily: 'var(--font-mono)' }}>02</span>
-                  <p>選擇情報模式或金融模式，再切換地區、頻道與時間維度。</p>
+                  <p>切換地區、頻道與時間維度以精細調整分析範圍。</p>
                 </div>
                 <div className="flex gap-3">
                   <span className="text-indigo-400 font-bold shrink-0" style={{ fontFamily: 'var(--font-mono)' }}>03</span>
