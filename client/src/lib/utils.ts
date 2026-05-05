@@ -36,12 +36,14 @@ export const parseIntelContent = (content: string): IntelData => {
   return {
     date: (text.match(/【刊報日期】[：:]\s*([^\n]+)/) || [])[1] || '',
     confidence: (text.match(/【可信度】[：:]\s*([^\n]+)/) || [])[1] || '',
-    subject: (text.match(/【主體】[：:]\s*([\s\S]*?)(?=\n【(?:分析|影響|出處|報導標題|連結)】|$)/) || [])[1] || '',
-    analysis: (text.match(/【分析】[：:]\s*([\s\S]*?)(?=\n【(?:影響|出處|報導標題|連結)】|$)/) || [])[1] || '',
-    impact: (text.match(/【影響】[：:]\s*([\s\S]*?)(?=\n【(?:出處|報導標題|連結)】|$)/) || [])[1] || '',
+    subject: (text.match(/【主體】[：:]\s*([\s\S]*?)(?=\n【(?:分析|影響|出處|報導標題|連結|總體戰略研判|旅遊建議)】|$)/) || [])[1] || '',
+    analysis: (text.match(/【分析】[：:]\s*([\s\S]*?)(?=\n【(?:影響|出處|報導標題|連結|總體戰略研判)】|$)/) || [])[1] || '',
+    travelTips: (text.match(/【旅遊建議】[：:]\s*([\s\S]*?)(?=\n【(?:影響|出處|報導標題|連結|總體戰略研判|整體旅遊評估)】|$)/) || [])[1] || '',
+    impact: (text.match(/【影響】[：:]\s*([\s\S]*?)(?=\n【(?:出處|報導標題|連結|總體戰略研判)】|$)/) || [])[1] || '',
     source: (text.match(/【出處】[：:]\s*([^\n]+)/) || [])[1] || '',
     articleTitle: (text.match(/【報導標題】[：:]\s*([^\n]+)/) || [])[1] || '',
     link: (text.match(/【連結】[：:]\s*([^\n]+)/) || [])[1] || '',
+    strategicJudgment: (text.match(/【(?:總體戰略研判|整體旅遊評估)】[：:]\s*([\s\S]*?)$/) || [])[1]?.trim() || '',
   };
 };
 
@@ -64,8 +66,9 @@ export const parseAnalysis = (raw: string): ParsedAnalysis => {
   if (!raw) return { items: [], summary: '' };
   let summary = '';
   let working = raw;
-  const summaryMatch = working.match(/(?:【(?:總體戰略研判|總體資金流向研判|總體研判|結論)】[：:]?)([\s\S]*)$/);
-  if (summaryMatch) {
+  // Match the standalone overall summary block preceded by a blank line (double newline)
+  // This distinguishes the final overall summary from per-item 【總體戰略研判】 fields
+  const summaryMatch = working.match(/\n\n【(?:總體戰略研判|總體資金流向研判|總體研判|結論)】[：:]([\/\s\S]*)$/); if (summaryMatch) {
     summary = summaryMatch[1].trim();
     working = working.slice(0, summaryMatch.index).trim();
   }

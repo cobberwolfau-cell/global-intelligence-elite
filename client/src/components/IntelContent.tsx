@@ -137,11 +137,18 @@ export const IntelContent = ({ content, mode }: IntelContentProps) => {
           </div>
         </div>
         <FieldBlock label="主體" value={data.subject} accent="indigo" />
-        <FieldBlock label="分析" value={data.analysis} accent="purple" />
+        {data.travelTips && <FieldBlock label="旅遊建議" value={data.travelTips} accent="cyan" />}
+        {data.analysis && <FieldBlock label="分析" value={data.analysis} accent="purple" />}
         <FieldBlock label="影響" value={data.impact} accent="emerald" />
         <div className="grid grid-cols-2 gap-3">
           <SourceBlock source={data.source} articleTitle={data.articleTitle} link={data.link} />
         </div>
+        {data.strategicJudgment && (
+          <div className="rounded-xl bg-indigo-950/30 border border-indigo-500/30 p-4">
+            <div className="text-[11px] uppercase tracking-[0.24em] text-indigo-300 mb-2" style={{ fontFamily: 'var(--font-mono)' }}>戰略研判</div>
+            <div className="text-slate-300 leading-7 text-sm whitespace-pre-wrap">{data.strategicJudgment}</div>
+          </div>
+        )}
       </div>
     );
   }

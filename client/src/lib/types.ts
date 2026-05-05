@@ -39,10 +39,12 @@ export interface IntelData {
   confidence: string;
   subject: string;
   analysis: string;
+  travelTips: string;
   impact: string;
   source: string;
   articleTitle: string;
   link: string;
+  strategicJudgment: string;
 }
 
 export interface FinanceData {
