@@ -9,3 +9,5 @@
 - [x] 更新使用說明文字，移除 API Key 相關指引
 - [x] 修正 storageProxy.ts TypeScript 錯誤
 - [x] DeepSeek API Key 驗證測試通過
+- [x] IntelContent.tsx 出處欄位加入可點擊的「查看原文」連結按鈕（SourceBlock 元件）
+- [x] AI Prompt 更新：要求 AI 盡量提供真實官方網址而非 N/A
