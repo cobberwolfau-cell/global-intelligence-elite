@@ -36,10 +36,11 @@ export const parseIntelContent = (content: string): IntelData => {
   return {
     date: (text.match(/【刊報日期】[：:]\s*([^\n]+)/) || [])[1] || '',
     confidence: (text.match(/【可信度】[：:]\s*([^\n]+)/) || [])[1] || '',
-    subject: (text.match(/【主體】[：:]\s*([\s\S]*?)(?=\n【(?:分析|影響|出處|連結)】|$)/) || [])[1] || '',
-    analysis: (text.match(/【分析】[：:]\s*([\s\S]*?)(?=\n【(?:影響|出處|連結)】|$)/) || [])[1] || '',
-    impact: (text.match(/【影響】[：:]\s*([\s\S]*?)(?=\n【(?:出處|連結)】|$)/) || [])[1] || '',
+    subject: (text.match(/【主體】[：:]\s*([\s\S]*?)(?=\n【(?:分析|影響|出處|報導標題|連結)】|$)/) || [])[1] || '',
+    analysis: (text.match(/【分析】[：:]\s*([\s\S]*?)(?=\n【(?:影響|出處|報導標題|連結)】|$)/) || [])[1] || '',
+    impact: (text.match(/【影響】[：:]\s*([\s\S]*?)(?=\n【(?:出處|報導標題|連結)】|$)/) || [])[1] || '',
     source: (text.match(/【出處】[：:]\s*([^\n]+)/) || [])[1] || '',
+    articleTitle: (text.match(/【報導標題】[：:]\s*([^\n]+)/) || [])[1] || '',
     link: (text.match(/【連結】[：:]\s*([^\n]+)/) || [])[1] || '',
   };
 };
@@ -47,13 +48,14 @@ export const parseIntelContent = (content: string): IntelData => {
 export const parseFinanceContent = (content: string): FinanceData => {
   const text = content || '';
   return {
-    price: (text.match(/【最新報價】[：:]\s*([\s\S]*?)(?=\n【(?:資產標的|趨勢判定|市場分析|關鍵點位|期貨動向|出處|連結)】|$)/) || [])[1] || '',
-    asset: (text.match(/【資產標的】[：:]\s*([\s\S]*?)(?=\n【(?:趨勢判定|市場分析|關鍵點位|期貨動向|出處|連結)】|$)/) || [])[1] || '',
+    price: (text.match(/【最新報價】[：:]\s*([\s\S]*?)(?=\n【(?:資產標的|趨勢判定|市場分析|關鍵點位|期貨動向|出處|報導標題|連結)】|$)/) || [])[1] || '',
+    asset: (text.match(/【資產標的】[：:]\s*([\s\S]*?)(?=\n【(?:趨勢判定|市場分析|關鍵點位|期貨動向|出處|報導標題|連結)】|$)/) || [])[1] || '',
     trend: (text.match(/【趨勢判定】[：:]\s*([^\n]+)/) || [])[1] || '',
-    analysis: (text.match(/【市場分析】[：:]\s*([\s\S]*?)(?=\n【(?:關鍵點位|期貨動向|出處|連結)】|$)/) || [])[1] || '',
-    levels: (text.match(/【關鍵點位】[：:]\s*([\s\S]*?)(?=\n【(?:期貨動向|出處|連結)】|$)/) || [])[1] || '',
-    futures: (text.match(/【期貨動向】[：:]\s*([\s\S]*?)(?=\n【(?:出處|連結)】|$)/) || [])[1] || '',
+    analysis: (text.match(/【市場分析】[：:]\s*([\s\S]*?)(?=\n【(?:關鍵點位|期貨動向|出處|報導標題|連結)】|$)/) || [])[1] || '',
+    levels: (text.match(/【關鍵點位】[：:]\s*([\s\S]*?)(?=\n【(?:期貨動向|出處|報導標題|連結)】|$)/) || [])[1] || '',
+    futures: (text.match(/【期貨動向】[：:]\s*([\s\S]*?)(?=\n【(?:出處|報導標題|連結)】|$)/) || [])[1] || '',
     source: (text.match(/【出處】[：:]\s*([^\n]+)/) || [])[1] || '',
+    articleTitle: (text.match(/【報導標題】[：:]\s*([^\n]+)/) || [])[1] || '',
     link: (text.match(/【連結】[：:]\s*([^\n]+)/) || [])[1] || '',
   };
 };

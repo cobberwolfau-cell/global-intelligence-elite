@@ -42,8 +42,21 @@ const FieldBlock = ({
   );
 };
 
-/** Render a source + link block. If link is a valid URL, show a clickable anchor. */
-const SourceBlock = ({ source, link }: { source: string; link: string }) => {
+/**
+ * Render a source block showing:
+ *  - Media/institution name (source)
+ *  - Article title (articleTitle) — the specific report being cited
+ *  - Clickable "查看原文" link if a valid URL is provided
+ */
+const SourceBlock = ({
+  source,
+  articleTitle,
+  link,
+}: {
+  source: string;
+  articleTitle: string;
+  link: string;
+}) => {
   const isValidUrl = (s: string) => {
     try {
       const url = new URL(s);
@@ -53,18 +66,42 @@ const SourceBlock = ({ source, link }: { source: string; link: string }) => {
     }
   };
   const hasLink = link && link.trim() !== '' && link.trim().toUpperCase() !== 'N/A' && isValidUrl(link.trim());
+  const hasArticleTitle = articleTitle && articleTitle.trim() !== '' && articleTitle.trim().toUpperCase() !== 'N/A';
 
   return (
     <div className="rounded-xl bg-slate-950/60 border border-slate-800 p-3 col-span-2">
       <div className="text-[11px] uppercase tracking-[0.22em] text-slate-500 mb-2" style={{ fontFamily: 'var(--font-mono)' }}>出處</div>
-      <div className="flex items-start gap-2 flex-wrap">
-        <span className="text-slate-300 text-sm">{source || '未提供'}</span>
-        {hasLink && (
+      {/* Media / institution name */}
+      <div className="flex items-center gap-2 flex-wrap mb-1">
+        <span className="text-slate-400 text-xs" style={{ fontFamily: 'var(--font-mono)' }}>媒體</span>
+        <span className="text-slate-200 text-sm font-medium">{source || '未提供'}</span>
+      </div>
+      {/* Article title */}
+      {hasArticleTitle && (
+        <div className="flex items-start gap-2 flex-wrap mb-2">
+          <span className="text-slate-400 text-xs shrink-0 mt-0.5" style={{ fontFamily: 'var(--font-mono)' }}>報導</span>
+          {hasLink ? (
+            <a
+              href={link.trim()}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-indigo-300 hover:text-indigo-200 text-sm leading-snug underline underline-offset-2 decoration-indigo-500/40 hover:decoration-indigo-400 transition-colors"
+            >
+              {articleTitle.trim()}
+            </a>
+          ) : (
+            <span className="text-slate-300 text-sm leading-snug">{articleTitle.trim()}</span>
+          )}
+        </div>
+      )}
+      {/* Link button (shown when no article title, or as standalone button) */}
+      {hasLink && !hasArticleTitle && (
+        <div className="mt-1">
           <a
             href={link.trim()}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 text-indigo-400 hover:text-indigo-300 text-xs border border-indigo-500/30 rounded-lg px-2 py-0.5 transition-colors hover:border-indigo-400/50 hover:bg-indigo-500/10 shrink-0"
+            className="inline-flex items-center gap-1 text-indigo-400 hover:text-indigo-300 text-xs border border-indigo-500/30 rounded-lg px-2 py-0.5 transition-colors hover:border-indigo-400/50 hover:bg-indigo-500/10"
             style={{ fontFamily: 'var(--font-mono)' }}
           >
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -74,11 +111,12 @@ const SourceBlock = ({ source, link }: { source: string; link: string }) => {
             </svg>
             查看原文
           </a>
-        )}
-        {!hasLink && link && link.trim().toUpperCase() !== 'N/A' && (
-          <span className="text-slate-500 text-xs italic">{link.trim()}</span>
-        )}
-      </div>
+        </div>
+      )}
+      {/* Show link as plain text if it's not a valid URL but not N/A */}
+      {!hasLink && link && link.trim().toUpperCase() !== 'N/A' && (
+        <span className="text-slate-500 text-xs italic">{link.trim()}</span>
+      )}
     </div>
   );
 };
@@ -102,7 +140,7 @@ export const IntelContent = ({ content, mode }: IntelContentProps) => {
         <FieldBlock label="分析" value={data.analysis} accent="purple" />
         <FieldBlock label="影響" value={data.impact} accent="emerald" />
         <div className="grid grid-cols-2 gap-3">
-          <SourceBlock source={data.source} link={data.link} />
+          <SourceBlock source={data.source} articleTitle={data.articleTitle} link={data.link} />
         </div>
       </div>
     );
@@ -139,7 +177,7 @@ export const IntelContent = ({ content, mode }: IntelContentProps) => {
       <FieldBlock label="關鍵點位" value={data.levels} accent="rose" />
       <FieldBlock label="期貨動向" value={data.futures} accent="emerald" />
       <div className="grid grid-cols-2 gap-3">
-        <SourceBlock source={data.source} link={data.link} />
+        <SourceBlock source={data.source} articleTitle={data.articleTitle} link={data.link} />
       </div>
     </div>
   );

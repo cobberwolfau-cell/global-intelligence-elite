@@ -41,6 +41,7 @@ export interface IntelData {
   analysis: string;
   impact: string;
   source: string;
+  articleTitle: string;
   link: string;
 }
 
@@ -52,6 +53,7 @@ export interface FinanceData {
   levels: string;
   futures: string;
   source: string;
+  articleTitle: string;
   link: string;
 }
 
