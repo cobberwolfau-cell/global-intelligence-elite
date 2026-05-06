@@ -1115,9 +1115,20 @@ export default function Home() {
               {/* Analysis Items */}
               <div className="space-y-4">
                 {loading
-                  ? Array.from({ length: 5 }).map((_, idx) => (
-                      <div key={idx} className="h-28 rounded-2xl border border-slate-800 bg-slate-950/50 animate-pulse" />
-                    ))
+                  ? (
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-3 px-4 py-3 rounded-xl border border-indigo-500/20 bg-indigo-500/5">
+                        <Icon name="lucide:loader-2" size={16} className="animate-spin text-indigo-400 shrink-0" />
+                        <div>
+                          <div className="text-sm font-medium text-indigo-300">DeepSeek 正在分析中...</div>
+                          <div className="text-xs text-slate-500 mt-0.5">正在生成 {itemCount} 則情報，預計需要 20-40 秒，請稍候</div>
+                        </div>
+                      </div>
+                      {Array.from({ length: 5 }).map((_, idx) => (
+                        <div key={idx} className="h-28 rounded-2xl border border-slate-800 bg-slate-950/50 animate-pulse" />
+                      ))}
+                    </div>
+                  )
                   : displayedItems.length
                     ? displayedItems.map(item => {
                         const advice = itemAnalyses[`${item.id}_advice`] || { loading: false, text: '' };

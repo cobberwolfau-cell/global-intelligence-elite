@@ -15,3 +15,4 @@
 - [x] types.ts 的 IntelData / FinanceData 加入 articleTitle 欄位
 - [x] utils.ts 的 parseIntelContent / parseFinanceContent 解析【報導標題】
 - [x] IntelContent.tsx 出處區塊顯示報導標題（媒體名稱 + 報導標題超連結）
+- [x] 改善 loading 狀態 UI：加入「DeepSeek 正在分析中...」進度提示文字，告知使用者預計等待時間
