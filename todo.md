@@ -26,3 +26,5 @@
 - [x] 修復 news response 解析路徑（result.data.json.articles）
 - [x] 修復 newsService.ts 改用 everything 端點（top-headlines 對大多數國家無效）
 - [x] 改善 newsService 查詢策略：中文地區（台灣、香港、澳門、中國、新加坡）優先使用 language=zh 過濾，確保取得中文新聞；其他地區使用英文新聞
+- [x] 為 NewsAPI 加入日文語言支援：日本使用無語言限制查詢（NewsAPI 免費版不支援 ja 過濾），自然回傳 NHK、Livedoor 等日文媒體
+- [x] 為 NewsAPI 加入韓文（ko）語言支援，讓韓國地區取得韓文新聞（Venturesquare、Ohmynews、Kbench 等）

@@ -15,7 +15,7 @@ const COUNTRY_NAME_MAP: Record<string, string> = {
   Macau: "Macau",
   China: "China",
   Japan: "Japan",
-  SouthKorea: "South Korea",
+  SouthKorea: "Korea",
   NorthKorea: "North Korea",
   Singapore: "Singapore",
   Malaysia: "Malaysia",
@@ -94,10 +94,25 @@ const COUNTRY_NAME_MAP: Record<string, string> = {
   Global: "world",
 };
 
-// Countries where Chinese-language news is available
-const CHINESE_LANGUAGE_COUNTRIES = new Set([
-  "Taiwan", "HongKong", "Macau", "China", "Singapore",
-]);
+/**
+ * Language strategy per country:
+ * - "zh": Chinese (Traditional/Simplified) — Taiwan, HK, Macau, China, Singapore
+ * - "ko": Korean — South Korea, North Korea
+ * - "ja": Japanese — Japan (NOTE: NewsAPI free tier returns 0 results for ja filter,
+ *         so Japan falls back to no-language filter which naturally includes Japanese media)
+ * - "en": English fallback for all other countries
+ * - null: No language filter (returns mixed-language results, used for Japan)
+ */
+const COUNTRY_LANGUAGE_MAP: Record<string, string | null> = {
+  Taiwan: "zh",
+  HongKong: "zh",
+  Macau: "zh",
+  China: "zh",
+  Singapore: "zh",
+  SouthKorea: "ko",
+  NorthKorea: "ko",
+  Japan: null,   // NewsAPI free tier doesn't support 'ja' filter; no-filter returns Japanese media naturally
+};
 
 // Map intel categories to additional search keywords
 const CATEGORY_KEYWORD_MAP: Record<string, string> = {
@@ -118,8 +133,12 @@ const CATEGORY_KEYWORD_MAP: Record<string, string> = {
 
 /**
  * Fetch real news articles from NewsAPI based on country and category.
- * Uses the 'everything' endpoint with country name + optional category keyword.
- * For Chinese-speaking regions, fetches Chinese-language news first.
+ *
+ * Language strategy:
+ * - Chinese-speaking regions (TW/HK/MO/CN/SG): fetch zh first, fall back to en
+ * - Korean-speaking regions (KR/KP): fetch ko first, fall back to en
+ * - Japan: no language filter (NewsAPI free tier doesn't support 'ja'; query naturally returns Japanese media)
+ * - All others: fetch en only
  */
 export async function fetchNews(
   country: string,
@@ -131,7 +150,6 @@ export async function fetchNews(
 
   const countryName = COUNTRY_NAME_MAP[country] ?? country;
   const keyword = CATEGORY_KEYWORD_MAP[category] ?? "";
-  const useChinese = CHINESE_LANGUAGE_COUNTRIES.has(country);
 
   // Build search query: combine country name with optional category keyword
   const q = keyword
@@ -143,16 +161,47 @@ export async function fetchNews(
     .toISOString()
     .split("T")[0];
 
-  // For Chinese-speaking regions, try Chinese-language news first
-  if (useChinese) {
-    const zhUrl = `https://newsapi.org/v2/everything?q=${encodeURIComponent(q)}&language=zh&from=${from}&sortBy=publishedAt&pageSize=${pageSize}&apiKey=${apiKey}`;
-    const zhArticles = await fetchFromUrl(zhUrl);
-    if (zhArticles.length > 0) return zhArticles;
+  // Determine language strategy
+  const hasExplicitLanguage = Object.prototype.hasOwnProperty.call(COUNTRY_LANGUAGE_MAP, country);
+  const preferredLang = hasExplicitLanguage ? COUNTRY_LANGUAGE_MAP[country] : "en";
+
+  if (preferredLang !== null && preferredLang !== undefined && preferredLang !== "en") {
+    // Try preferred local language first (zh or ko)
+    const localUrl = buildUrl(q, preferredLang, from, pageSize, apiKey);
+    const localArticles = await fetchFromUrl(localUrl);
+    if (localArticles.length > 0) return localArticles;
+    // Fall back to English if local language returns nothing
+    const enUrl = buildUrl(q, "en", from, pageSize, apiKey);
+    return fetchFromUrl(enUrl);
   }
 
-  // Fall back to English-language news (or primary for non-Chinese regions)
-  const enUrl = `https://newsapi.org/v2/everything?q=${encodeURIComponent(q)}&language=en&from=${from}&sortBy=publishedAt&pageSize=${pageSize}&apiKey=${apiKey}`;
+  if (preferredLang === null) {
+    // No language filter (Japan): returns mixed results naturally including local media
+    const noLangUrl = buildUrl(q, null, from, pageSize, apiKey);
+    return fetchFromUrl(noLangUrl);
+  }
+
+  // Default: English only
+  const enUrl = buildUrl(q, "en", from, pageSize, apiKey);
   return fetchFromUrl(enUrl);
+}
+
+function buildUrl(
+  q: string,
+  language: string | null,
+  from: string,
+  pageSize: number,
+  apiKey: string
+): string {
+  const params = new URLSearchParams({
+    q,
+    from,
+    sortBy: "publishedAt",
+    pageSize: String(pageSize),
+    apiKey,
+  });
+  if (language) params.set("language", language);
+  return `https://newsapi.org/v2/everything?${params.toString()}`;
 }
 
 async function fetchFromUrl(url: string): Promise<NewsArticle[]> {
