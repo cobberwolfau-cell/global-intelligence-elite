@@ -28,3 +28,7 @@
 - [x] 改善 newsService 查詢策略：中文地區（台灣、香港、澳門、中國、新加坡）優先使用 language=zh 過濾，確保取得中文新聞；其他地區使用英文新聞
 - [x] 為 NewsAPI 加入日文語言支援：日本使用無語言限制查詢（NewsAPI 免費版不支援 ja 過濾），自然回傳 NHK、Livedoor 等日文媒體
 - [x] 為 NewsAPI 加入韓文（ko）語言支援，讓韓國地區取得韓文新聞（Venturesquare、Ohmynews、Kbench 等）
+- [x] 建立 server/newsSourceMap.ts：70 個國家的當地主要新聞 RSS 來源資料庫（已驗證 URL 可用性）
+- [x] 建立 server/rssFetcher.ts：RSS 爬蟲服務，使用 fast-xml-parser 解析 RSS 2.0/Atom/RDF 格式，支援 fallback URL
+- [x] 更新 server/routers.ts：news.fetch 路由改用 RSS 爬蟲取代 NewsAPI，不再依賴 NEWS_API_KEY
+- [x] 驗證各地區 RSS 爬蟲效果：台灣(RTI)、日本(NHK)、英國(BBC)、德國(Tagesschau)、法國(Le Monde)、韓國(聯合新聞)、澳洲(ABC)、巴西(EBC) 均正常取得當地語言新聞
