@@ -4,6 +4,7 @@ import { getSessionCookieOptions } from "./_core/cookies";
 import { ENV } from "./_core/env";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router } from "./_core/trpc";
+import { fetchNews } from "./newsService";
 
 const DEEPSEEK_API_BASE = "https://api.deepseek.com/v1";
 const DEEPSEEK_MODEL = "deepseek-chat";
@@ -52,6 +53,24 @@ export const appRouter = router({
         success: true,
       } as const;
     }),
+  }),
+
+  news: router({
+    fetch: publicProcedure
+      .input(
+        z.object({
+          country: z.string(),
+          category: z.string(),
+          pageSize: z.number().min(1).max(20).optional().default(10),
+        })
+      )
+      .query(async ({ input }) => {
+        if (!ENV.newsApiKey) {
+          return { articles: [], error: "NewsAPI Key 未設定" };
+        }
+        const articles = await fetchNews(input.country, input.category, input.pageSize);
+        return { articles, error: null };
+      }),
   }),
 
   deepseek: router({

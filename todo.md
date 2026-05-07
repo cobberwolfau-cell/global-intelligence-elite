@@ -17,3 +17,12 @@
 - [x] IntelContent.tsx 出處區塊顯示報導標題（媒體名稱 + 報導標題超連結）
 - [x] 改善 loading 狀態 UI：加入「DeepSeek 正在分析中...」進度提示文字，告知使用者預計等待時間
 - [x] 更新 AI Prompt：加入消息來源優先順序指引（當地主流媒體 → 其他網頁 → 政府官方資訊）
+- [x] 設定 NEWS_API_KEY 環境變數
+- [x] 建立後端 NewsAPI 服務（server/newsService.ts），依地區和類別抓取真實新聞（使用 everything 端點）
+- [x] 建立 tRPC 路由 news.fetch，回傳真實新聞標題、連結、媒體名稱
+- [x] 更新 AI Prompt，以真實新聞作為分析基礎，確保出處連結 100% 真實
+- [x] 前端 loadAnalysis 先呼叫 news.fetch 取得真實新聞，再傳給 DeepSeek 分析
+- [x] 修復 news.fetch tRPC GET 請求的 input 格式（加入 superjson json wrapper）
+- [x] 修復 news response 解析路徑（result.data.json.articles）
+- [x] 修復 newsService.ts 改用 everything 端點（top-headlines 對大多數國家無效）
+- [x] 改善 newsService 查詢策略：中文地區（台灣、香港、澳門、中國、新加坡）優先使用 language=zh 過濾，確保取得中文新聞；其他地區使用英文新聞
