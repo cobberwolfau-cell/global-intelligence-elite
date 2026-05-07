@@ -1,18 +1,20 @@
 /**
  * rssFetcher.ts
  * ─────────────────────────────────────────────────────────────────────────────
- * Fetches and parses RSS feeds from local news sources for each country.
- * Uses fast-xml-parser for XML parsing.
+ * Fetches and parses RSS feeds from multiple local news sources per country.
+ * Fetches primary + all backup sources in parallel, then merges, deduplicates,
+ * and sorts by publication time (newest first).
  *
  * Pipeline:
- *  1. Look up the country's RSS source in NEWS_SOURCE_MAP
- *  2. Fetch the RSS XML via HTTP
- *  3. Parse XML → extract items (title, link, description, pubDate)
- *  4. Return structured NewsArticle[] for use in AI prompts
+ *  1. Look up the country's sources in NEWS_SOURCE_MAP (primary + backups)
+ *  2. Fetch all sources in parallel via HTTP
+ *  3. Parse each XML → extract items (title, link, description, pubDate)
+ *  4. Merge all results, deduplicate by URL, sort by publishedAt desc
+ *  5. Return top N articles for use in AI prompts
  */
 
 import { XMLParser } from "fast-xml-parser";
-import { NEWS_SOURCE_MAP } from "./newsSourceMap";
+import { NEWS_SOURCE_MAP, type RssSource } from "./newsSourceMap";
 
 export interface RssArticle {
   title: string;
@@ -39,26 +41,51 @@ const FETCH_HEADERS = {
 const FETCH_TIMEOUT_MS = 10_000;
 
 /**
- * Fetch news articles from the country's local RSS feed.
- * Falls back to the fallback URL if the primary fails.
+ * Fetch news articles from all of a country's RSS sources in parallel.
+ * Results are merged, deduplicated by URL, and sorted newest-first.
  */
 export async function fetchRssNews(
   country: string,
   maxItems = 10
 ): Promise<RssArticle[]> {
-  const source = NEWS_SOURCE_MAP[country];
-  if (!source) return [];
+  const entry = NEWS_SOURCE_MAP[country];
+  if (!entry) return [];
 
-  // Try primary URL first
-  let articles = await fetchAndParse(source.rssUrl, source.outlet, source.language, maxItems);
+  // Collect all sources: primary first, then backups
+  const allSources: RssSource[] = [entry.primary, ...entry.backups];
 
-  // Try fallback if primary returns nothing
-  if (articles.length === 0 && source.fallbackUrl) {
-    articles = await fetchAndParse(source.fallbackUrl, source.outlet, source.language, maxItems);
+  // Fetch all sources in parallel
+  const perSourceArticles = await Promise.all(
+    allSources.map((src) =>
+      fetchAndParse(src.url, src.outlet, src.language, maxItems)
+    )
+  );
+
+  // Flatten all results
+  const allArticles: RssArticle[] = perSourceArticles.flat();
+
+  // Deduplicate by URL (keep first occurrence = primary source wins)
+  const seen = new Set<string>();
+  const unique: RssArticle[] = [];
+  for (const article of allArticles) {
+    const key = normalizeUrl(article.url);
+    if (!seen.has(key)) {
+      seen.add(key);
+      unique.push(article);
+    }
   }
 
-  return articles;
+  // Sort by publication date, newest first
+  unique.sort((a, b) => {
+    const ta = parseDate(a.publishedAt);
+    const tb = parseDate(b.publishedAt);
+    return tb - ta;
+  });
+
+  return unique.slice(0, maxItems);
 }
+
+// ── Internal helpers ───────────────────────────────────────────────────────
 
 async function fetchAndParse(
   url: string,
@@ -73,6 +100,7 @@ async function fetchAndParse(
     const res = await fetch(url, {
       headers: FETCH_HEADERS,
       signal: controller.signal,
+      redirect: "follow",
     });
     clearTimeout(timeoutId);
 
@@ -94,7 +122,7 @@ function parseRssXml(
   try {
     const parsed = XML_PARSER.parse(xml);
 
-    // Handle both RSS 2.0 and Atom/RDF formats
+    // Handle RSS 2.0, Atom, and RDF formats
     const channel =
       parsed?.rss?.channel ??
       parsed?.["rdf:RDF"]?.channel ??
@@ -103,9 +131,6 @@ function parseRssXml(
 
     if (!channel) return [];
 
-    // RSS 2.0: items in channel.item
-    // Atom: entries in feed.entry
-    // RDF: items in rdf:RDF.item
     const rawItems: unknown[] =
       toArray(channel.item) ??
       toArray(parsed?.["rdf:RDF"]?.item) ??
@@ -120,15 +145,24 @@ function parseRssXml(
 
       const title = extractText(i.title);
       const url = extractLink(i);
-      const description = extractText(i.description) ?? extractText(i.summary) ?? null;
-      const pubDate = extractText(i.pubDate) ?? extractText(i.published) ?? extractText(i.updated) ?? new Date().toISOString();
+      const description =
+        extractText(i.description) ??
+        extractText(i.summary) ??
+        null;
+      const pubDate =
+        extractText(i.pubDate) ??
+        extractText(i.published) ??
+        extractText(i.updated) ??
+        new Date().toISOString();
 
       if (!title || !url) continue;
 
       articles.push({
         title: title.trim(),
         url: url.trim(),
-        description: description ? description.replace(/<[^>]+>/g, "").trim().slice(0, 300) : null,
+        description: description
+          ? description.replace(/<[^>]+>/g, "").trim().slice(0, 300)
+          : null,
         source: outletName,
         publishedAt: pubDate,
         language,
@@ -141,7 +175,27 @@ function parseRssXml(
   }
 }
 
-// ── Helpers ────────────────────────────────────────────────────────────────
+function normalizeUrl(url: string): string {
+  try {
+    const u = new URL(url);
+    // Remove trailing slash and common tracking params for dedup
+    u.searchParams.delete("utm_source");
+    u.searchParams.delete("utm_medium");
+    u.searchParams.delete("utm_campaign");
+    return u.origin + u.pathname + u.search;
+  } catch {
+    return url;
+  }
+}
+
+function parseDate(dateStr: string): number {
+  try {
+    const d = new Date(dateStr);
+    return isNaN(d.getTime()) ? 0 : d.getTime();
+  } catch {
+    return 0;
+  }
+}
 
 function toArray(val: unknown): unknown[] | null {
   if (!val) return null;
@@ -154,9 +208,7 @@ function extractText(val: unknown): string | null {
   if (typeof val === "number") return String(val);
   if (typeof val === "object" && val !== null) {
     const obj = val as Record<string, unknown>;
-    // CDATA
     if (obj.__cdata) return String(obj.__cdata);
-    // Atom <title type="text">
     if (obj["#text"]) return String(obj["#text"]);
     if (obj._) return String(obj._);
   }
@@ -164,11 +216,10 @@ function extractText(val: unknown): string | null {
 }
 
 function extractLink(item: Record<string, unknown>): string | null {
-  // RSS 2.0: <link>
   const link = item.link;
+
   if (typeof link === "string" && link.startsWith("http")) return link;
 
-  // Atom: <link href="..."/>
   if (typeof link === "object" && link !== null) {
     const l = link as Record<string, unknown>;
     if (l["@_href"]) return String(l["@_href"]);
@@ -176,7 +227,6 @@ function extractLink(item: Record<string, unknown>): string | null {
     if (l["#text"]) return String(l["#text"]);
   }
 
-  // Array of links (Atom can have multiple)
   if (Array.isArray(link)) {
     for (const l of link) {
       if (typeof l === "string" && l.startsWith("http")) return l;
@@ -187,10 +237,8 @@ function extractLink(item: Record<string, unknown>): string | null {
     }
   }
 
-  // RDF: <rdf:about>
   if (item["@_rdf:about"]) return String(item["@_rdf:about"]);
 
-  // Fallback: <guid> if it looks like a URL
   const guid = extractText(item.guid);
   if (guid && guid.startsWith("http")) return guid;
 

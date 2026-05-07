@@ -32,3 +32,5 @@
 - [x] 建立 server/rssFetcher.ts：RSS 爬蟲服務，使用 fast-xml-parser 解析 RSS 2.0/Atom/RDF 格式，支援 fallback URL
 - [x] 更新 server/routers.ts：news.fetch 路由改用 RSS 爬蟲取代 NewsAPI，不再依賴 NEWS_API_KEY
 - [x] 驗證各地區 RSS 爬蟲效果：台灣(RTI)、日本(NHK)、英國(BBC)、德國(Tagesschau)、法國(Le Monde)、韓國(聯合新聞)、澳洲(ABC)、巴西(EBC) 均正常取得當地語言新聞
+- [x] 擴充 newsSourceMap.ts：每個國家加入 2-3 個備用 RSS 來源（primary + backups 結構），共 70 個國家
+- [x] 更新 rssFetcher.ts：並行抓取多個 RSS 來源，合併文章並去重、依時間排序
