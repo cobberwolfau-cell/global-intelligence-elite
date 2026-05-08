@@ -995,8 +995,8 @@ export const NEWS_SOURCE_MAP: Record<string, CountryNewsSources> = {
 
   SolomonIslands: {
     primary: {
-      outlet: "Solomon Star News",
-      url: "https://www.solomonstarnews.com/feed/",
+      outlet: "SIBC (Solomon Islands Broadcasting Corporation)",
+      url: "https://www.sibconline.com.sb/feed/",
       language: "en",
     },
     backups: [

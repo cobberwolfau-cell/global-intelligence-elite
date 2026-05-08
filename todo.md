@@ -41,6 +41,6 @@
 - [x] 加入 BBC Travel 到全球旅遊媒體清單（已驗證 HTTP 200，有豐富旅遊內容）
 - [x] 移除 travelSourceMap.ts 中失效的自由時報旅遊版 RSS（404），改用自由時報一般新聞
 - [x] 更新 UK 旅遊來源 BBC Travel URL 為正確的 travel feed（bbc.com/travel/feed.rss）
-- [ ] 將嚴格在地新聞聚合邏輯整合進網站：rssFetcher.ts 加入各國國際新聞過濾關鍵字資料庫
-- [ ] 更新 newsSourceMap.ts：移除所有國際媒體備用來源（Al Jazeera、BBC 等），確保每個國家只使用純本土媒體 RSS
-- [ ] rssFetcher.ts 改用容錯 XML 解析，解決 ETtoday、UDN 等非標準 RSS 格式問題
+- [x] 將嚴格在地新聞聚合邏輯整合進網站：rssFetcher.ts 加入各國國際新聞過濾關鍵字資料庫（COUNTRY_FOREIGN_KEYWORDS，涵蓋 30+ 國家）
+- [x] 更新 newsSourceMap.ts：17 個國家的 primary 來源改為本地媒體；backups 保留 Al Jazeera/BBC 作為緊急備用（設計決策）
+- [x] rssFetcher.ts 改用容錯 XML 解析：主要使用 fast-xml-parser，失敗時 fallback 至 regex-based 解析器（解決 ETtoday、UDN 等非標準 RSS 格式）
