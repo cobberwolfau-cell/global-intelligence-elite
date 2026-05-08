@@ -34,3 +34,10 @@
 - [x] 驗證各地區 RSS 爬蟲效果：台灣(RTI)、日本(NHK)、英國(BBC)、德國(Tagesschau)、法國(Le Monde)、韓國(聯合新聞)、澳洲(ABC)、巴西(EBC) 均正常取得當地語言新聞
 - [x] 擴充 newsSourceMap.ts：每個國家加入 2-3 個備用 RSS 來源（primary + backups 結構），共 70 個國家
 - [x] 更新 rssFetcher.ts：並行抓取多個 RSS 來源，合併文章並去重、依時間排序
+- [x] 修復新聞過濾：rssFetcher 加入 isLocal 標記和 skipLocalFilter 邏輯，一般新聞優先顯示當地新聞（不足時才 fallback 到國際媒體）
+- [x] 旅遊資訊類別：建立 travelSourceMap.ts（70 個國家 + 全球旅遊媒體 CNT/Fodors/Nomadic Matt/The Points Guy/Atlas Obscura），旅遊類別使用旅遊來源
+- [x] 修復 rssFetcher 每來源文章數量限制（旅遊模式下每來源最多 3 篇），確保多來源均衡顯示
+- [x] 修正 rssFetcher 旅遊模式每來源限額為固定 3 篇（修正 Math.max 邏輯）
+- [x] 加入 BBC Travel 到全球旅遊媒體清單（已驗證 HTTP 200，有豐富旅遊內容）
+- [x] 移除 travelSourceMap.ts 中失效的自由時報旅遊版 RSS（404），改用自由時報一般新聞
+- [x] 更新 UK 旅遊來源 BBC Travel URL 為正確的 travel feed（bbc.com/travel/feed.rss）

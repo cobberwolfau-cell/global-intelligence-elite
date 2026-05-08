@@ -5,6 +5,7 @@ import { ENV } from "./_core/env";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router } from "./_core/trpc";
 import { fetchRssNews } from "./rssFetcher";
+import { getTravelSources } from "./travelSourceMap";
 
 const DEEPSEEK_API_BASE = "https://api.deepseek.com/v1";
 const DEEPSEEK_MODEL = "deepseek-chat";
@@ -65,7 +66,14 @@ export const appRouter = router({
         })
       )
       .query(async ({ input }) => {
-        const articles = await fetchRssNews(input.country, input.pageSize);
+        let articles;
+        if (input.category === 'travel') {
+          // Use travel-specific RSS sources (TripAdvisor, CNT, Fodor's, local tourism media)
+          const travelSources = getTravelSources(input.country);
+          articles = await fetchRssNews(input.country, input.pageSize, travelSources);
+        } else {
+          articles = await fetchRssNews(input.country, input.pageSize);
+        }
         return { articles, error: null };
       }),
   }),

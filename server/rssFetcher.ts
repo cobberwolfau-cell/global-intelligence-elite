@@ -10,7 +10,8 @@
  *  2. Fetch all sources in parallel via HTTP
  *  3. Parse each XML → extract items (title, link, description, pubDate)
  *  4. Merge all results, deduplicate by URL, sort by publishedAt desc
- *  5. Return top N articles for use in AI prompts
+ *  5. Filter: prefer local sources; only include international sources if no local articles found
+ *  6. Return top N articles for use in AI prompts
  */
 
 import { XMLParser } from "fast-xml-parser";
@@ -23,6 +24,7 @@ export interface RssArticle {
   source: string;
   publishedAt: string;
   language: string;
+  isLocal: boolean;  // true = from a country-specific local outlet
 }
 
 const XML_PARSER = new XMLParser({
@@ -40,30 +42,66 @@ const FETCH_HEADERS = {
 
 const FETCH_TIMEOUT_MS = 10_000;
 
+// International/global outlets that should only be used as fallback
+const INTERNATIONAL_OUTLETS = new Set([
+  "al jazeera",
+  "bbc world",
+  "bbc news world",
+  "reuters",
+  "associated press",
+  "ap news",
+  "cnn",
+  "france 24",
+  "dw",
+  "deutsche welle",
+  "npr",
+  "npr news",
+  "abc news australia",
+  "rnz pacific",
+  "rnz",
+  "south china morning post",
+  "scmp",
+]);
+
+function isInternationalOutlet(outletName: string): boolean {
+  return INTERNATIONAL_OUTLETS.has(outletName.toLowerCase().trim());
+}
+
 /**
  * Fetch news articles from all of a country's RSS sources in parallel.
  * Results are merged, deduplicated by URL, and sorted newest-first.
+ * Local outlets are preferred; international outlets only used if no local articles found.
  */
 export async function fetchRssNews(
   country: string,
-  maxItems = 10
+  maxItems = 10,
+  customSources?: RssSource[]
 ): Promise<RssArticle[]> {
-  const entry = NEWS_SOURCE_MAP[country];
-  if (!entry) return [];
-
-  // Collect all sources: primary first, then backups
-  const allSources: RssSource[] = [entry.primary, ...entry.backups];
-
-  // Fetch all sources in parallel
+  // When customSources is provided (travel mode), skip the local-only filter
+  // so global travel media (CNT, Fodors, etc.) are always included.
+  const skipLocalFilter = customSources != null && customSources.length > 0;
+  let allSources: RssSource[];
+  if (skipLocalFilter) {
+    allSources = customSources!;
+  } else {
+    const entry = NEWS_SOURCE_MAP[country];
+    if (!entry) return [];
+    // Collect all sources: primary first, then backups
+    allSources = [entry.primary, ...entry.backups];
+  }
+  // Fetch all sources in parallel, tagging each article with isLocal flag
+  // In travel mode: cap per-source items to 3 so global travel media also get representation
+  const perSourceLimit = skipLocalFilter
+    ? 3  // travel mode: at most 3 articles per source for balanced multi-source output
+    : maxItems;
   const perSourceArticles = await Promise.all(
-    allSources.map((src) =>
-      fetchAndParse(src.url, src.outlet, src.language, maxItems)
-    )
+    allSources.map((src) => {
+      const local = !isInternationalOutlet(src.outlet);
+      return fetchAndParse(src.url, src.outlet, src.language, perSourceLimit, local);
+    })
   );
-
   // Flatten all results
   const allArticles: RssArticle[] = perSourceArticles.flat();
-
   // Deduplicate by URL (keep first occurrence = primary source wins)
   const seen = new Set<string>();
   const unique: RssArticle[] = [];
@@ -74,16 +112,24 @@ export async function fetchRssNews(
       unique.push(article);
     }
   }
-
   // Sort by publication date, newest first
   unique.sort((a, b) => {
     const ta = parseDate(a.publishedAt);
     const tb = parseDate(b.publishedAt);
     return tb - ta;
   });
-
-  return unique.slice(0, maxItems);
+  if (skipLocalFilter) {
+    // Travel mode: include all sources (local + global travel media)
+    return unique.slice(0, maxItems);
+  }
+  // News mode: prefer local articles; only include international if local is sparse
+  const localArticles = unique.filter((a) => a.isLocal);
+  const finalArticles = localArticles.length >= Math.ceil(maxItems / 2)
+    ? localArticles  // enough local content — use only local
+    : unique;        // fallback: include international if local is sparse
+  return finalArticles.slice(0, maxItems);
 }
+
 
 // ── Internal helpers ───────────────────────────────────────────────────────
 
@@ -91,7 +137,8 @@ async function fetchAndParse(
   url: string,
   outletName: string,
   language: string,
-  maxItems: number
+  maxItems: number,
+  isLocal = true
 ): Promise<RssArticle[]> {
   try {
     const controller = new AbortController();
@@ -107,7 +154,7 @@ async function fetchAndParse(
     if (!res.ok) return [];
 
     const xml = await res.text();
-    return parseRssXml(xml, outletName, language, maxItems);
+    return parseRssXml(xml, outletName, language, maxItems, isLocal);
   } catch {
     return [];
   }
@@ -117,7 +164,8 @@ function parseRssXml(
   xml: string,
   outletName: string,
   language: string,
-  maxItems: number
+  maxItems: number,
+  isLocalSource = true
 ): RssArticle[] {
   try {
     const parsed = XML_PARSER.parse(xml);
@@ -166,6 +214,7 @@ function parseRssXml(
         source: outletName,
         publishedAt: pubDate,
         language,
+        isLocal: isLocalSource,
       });
     }
 
