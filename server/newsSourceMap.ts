@@ -50,8 +50,8 @@ export const NEWS_SOURCE_MAP: Record<string, CountryNewsSources> = {
 
   Macau: {
     primary: {
-      outlet: "South China Morning Post",
-      url: "https://www.scmp.com/rss/91/feed",
+      outlet: "Macau Post Daily",
+      url: "https://www.macaupost.com/feed/",
       language: "en",
     },
     backups: [
@@ -98,13 +98,13 @@ export const NEWS_SOURCE_MAP: Record<string, CountryNewsSources> = {
 
   NorthKorea: {
     primary: {
-      outlet: "Al Jazeera",
-      url: "https://www.aljazeera.com/xml/rss/all.xml",
+      outlet: "NK News",
+      url: "https://www.nknews.org/feed/",
       language: "en",
     },
     backups: [
+      { outlet: "KCNA Watch", url: "https://kcnawatch.org/newstream/atom/", language: "en" },
       { outlet: "Yonhap English", url: "https://en.yna.co.kr/RSS/news.xml", language: "en" },
-      { outlet: "RFE/RL", url: "https://www.rferl.org/api/epiqq", language: "en" },
     ],
   },
 
@@ -218,85 +218,85 @@ export const NEWS_SOURCE_MAP: Record<string, CountryNewsSources> = {
 
   SriLanka: {
     primary: {
-      outlet: "Al Jazeera",
-      url: "https://www.aljazeera.com/xml/rss/all.xml",
+      outlet: "Ada Derana",
+      url: "https://www.adaderana.lk/rss.php",
       language: "en",
     },
     backups: [
-      { outlet: "The Hindu", url: "https://www.thehindu.com/news/feeder/default.rss", language: "en" },
-      { outlet: "Times of India", url: "https://timesofindia.indiatimes.com/rssfeedstopstories.cms", language: "en" },
+      { outlet: "Daily Mirror Sri Lanka", url: "https://www.dailymirror.lk/rss", language: "en" },
+      { outlet: "Al Jazeera", url: "https://www.aljazeera.com/xml/rss/all.xml", language: "en" },
     ],
   },
 
   Myanmar: {
     primary: {
-      outlet: "Al Jazeera",
-      url: "https://www.aljazeera.com/xml/rss/all.xml",
+      outlet: "Myanmar Now",
+      url: "https://myanmar-now.org/en/feed/",
       language: "en",
     },
     backups: [
-      { outlet: "RFE/RL", url: "https://www.rferl.org/api/epiqq", language: "en" },
-      { outlet: "Channel NewsAsia", url: "https://www.channelnewsasia.com/api/v1/rss-outbound-feed?_format=xml&category=10416", language: "en" },
+      { outlet: "The Irrawaddy", url: "https://www.irrawaddy.com/feed", language: "en" },
+      { outlet: "Al Jazeera", url: "https://www.aljazeera.com/xml/rss/all.xml", language: "en" },
     ],
   },
 
   Cambodia: {
     primary: {
-      outlet: "Al Jazeera",
-      url: "https://www.aljazeera.com/xml/rss/all.xml",
+      outlet: "The Cambodia Daily",
+      url: "https://english.cambodiadaily.com/feed/",
       language: "en",
     },
     backups: [
-      { outlet: "Channel NewsAsia", url: "https://www.channelnewsasia.com/api/v1/rss-outbound-feed?_format=xml&category=10416", language: "en" },
-      { outlet: "Bangkok Post", url: "https://www.bangkokpost.com/rss/data/topstories.xml", language: "en" },
+      { outlet: "Phnom Penh Post", url: "https://www.phnompenhpost.com/rss.xml", language: "en" },
+      { outlet: "Al Jazeera", url: "https://www.aljazeera.com/xml/rss/all.xml", language: "en" },
     ],
   },
 
   Laos: {
     primary: {
-      outlet: "Al Jazeera",
-      url: "https://www.aljazeera.com/xml/rss/all.xml",
+      outlet: "Vientiane Times",
+      url: "https://www.vientianetimes.org.la/freeContent/FreeConten_Home.php?rss=1",
       language: "en",
     },
     backups: [
-      { outlet: "Channel NewsAsia", url: "https://www.channelnewsasia.com/api/v1/rss-outbound-feed?_format=xml&category=10416", language: "en" },
-      { outlet: "Bangkok Post", url: "https://www.bangkokpost.com/rss/data/topstories.xml", language: "en" },
+      { outlet: "KPL News", url: "https://kpl.net.la/en/rss", language: "en" },
+      { outlet: "Al Jazeera", url: "https://www.aljazeera.com/xml/rss/all.xml", language: "en" },
     ],
   },
 
   Mongolia: {
     primary: {
-      outlet: "Al Jazeera",
-      url: "https://www.aljazeera.com/xml/rss/all.xml",
+      outlet: "News.mn",
+      url: "https://news.mn/en/feed/",
       language: "en",
     },
     backups: [
-      { outlet: "RFE/RL", url: "https://www.rferl.org/api/epiqq", language: "en" },
-      { outlet: "China Daily", url: "https://www.chinadaily.com.cn/rss/china_rss.xml", language: "en" },
+      { outlet: "Montsame News Agency", url: "https://montsame.mn/en/rss", language: "en" },
+      { outlet: "Al Jazeera", url: "https://www.aljazeera.com/xml/rss/all.xml", language: "en" },
     ],
   },
 
   Kazakhstan: {
     primary: {
-      outlet: "Al Jazeera",
-      url: "https://www.aljazeera.com/xml/rss/all.xml",
+      outlet: "Astana Times",
+      url: "https://astanatimes.com/feed/",
       language: "en",
     },
     backups: [
-      { outlet: "RFE/RL", url: "https://www.rferl.org/api/epiqq", language: "en" },
-      { outlet: "TASS", url: "https://tass.ru/rss/v2.xml", language: "ru" },
+      { outlet: "Inform.kz", url: "https://www.inform.kz/en/rss", language: "en" },
+      { outlet: "Al Jazeera", url: "https://www.aljazeera.com/xml/rss/all.xml", language: "en" },
     ],
   },
 
   Uzbekistan: {
     primary: {
-      outlet: "Al Jazeera",
-      url: "https://www.aljazeera.com/xml/rss/all.xml",
+      outlet: "Gazeta.uz",
+      url: "https://www.gazeta.uz/en/rss",
       language: "en",
     },
     backups: [
-      { outlet: "RFE/RL", url: "https://www.rferl.org/api/epiqq", language: "en" },
-      { outlet: "TASS", url: "https://tass.ru/rss/v2.xml", language: "ru" },
+      { outlet: "Kun.uz", url: "https://kun.uz/en/rss", language: "en" },
+      { outlet: "Al Jazeera", url: "https://www.aljazeera.com/xml/rss/all.xml", language: "en" },
     ],
   },
 
@@ -350,13 +350,13 @@ export const NEWS_SOURCE_MAP: Record<string, CountryNewsSources> = {
 
   Iraq: {
     primary: {
-      outlet: "Al Jazeera",
-      url: "https://www.aljazeera.com/xml/rss/all.xml",
+      outlet: "Iraq News",
+      url: "https://www.iraqinews.com/feed/",
       language: "en",
     },
     backups: [
       { outlet: "Arab News", url: "https://www.arabnews.com/rss.xml", language: "en" },
-      { outlet: "RFE/RL", url: "https://www.rferl.org/api/epiqq", language: "en" },
+      { outlet: "Al Jazeera", url: "https://www.aljazeera.com/xml/rss/all.xml", language: "en" },
     ],
   },
 
@@ -727,13 +727,13 @@ export const NEWS_SOURCE_MAP: Record<string, CountryNewsSources> = {
 
   Venezuela: {
     primary: {
-      outlet: "Al Jazeera",
-      url: "https://www.aljazeera.com/xml/rss/all.xml",
-      language: "en",
+      outlet: "El Nacional",
+      url: "https://www.elnacional.com/feed/",
+      language: "es",
     },
     backups: [
       { outlet: "El País", url: "https://feeds.elpais.com/mrss-s/pages/ep/site/elpais.com/portada", language: "es" },
-      { outlet: "BBC News", url: "https://feeds.bbci.co.uk/news/rss.xml", language: "en" },
+      { outlet: "Al Jazeera", url: "https://www.aljazeera.com/xml/rss/all.xml", language: "en" },
     ],
   },
 
@@ -751,13 +751,13 @@ export const NEWS_SOURCE_MAP: Record<string, CountryNewsSources> = {
 
   Panama: {
     primary: {
-      outlet: "Al Jazeera",
-      url: "https://www.aljazeera.com/xml/rss/all.xml",
-      language: "en",
+      outlet: "La Prensa Panamá",
+      url: "https://www.prensa.com/feed/",
+      language: "es",
     },
     backups: [
-      { outlet: "El País", url: "https://feeds.elpais.com/mrss-s/pages/ep/site/elpais.com/portada", language: "es" },
-      { outlet: "BBC News", url: "https://feeds.bbci.co.uk/news/rss.xml", language: "en" },
+      { outlet: "TVN Noticias", url: "https://www.tvn-2.com/rss", language: "es" },
+      { outlet: "Al Jazeera", url: "https://www.aljazeera.com/xml/rss/all.xml", language: "en" },
     ],
   },
 
@@ -885,25 +885,25 @@ export const NEWS_SOURCE_MAP: Record<string, CountryNewsSources> = {
 
   Libya: {
     primary: {
-      outlet: "Al Jazeera",
-      url: "https://www.aljazeera.com/xml/rss/all.xml",
+      outlet: "Libya Herald",
+      url: "https://libyaherald.com/feed/",
       language: "en",
     },
     backups: [
-      { outlet: "Arab News", url: "https://www.arabnews.com/rss.xml", language: "en" },
-      { outlet: "BBC Africa", url: "https://feeds.bbci.co.uk/news/world/africa/rss.xml", language: "en" },
+      { outlet: "Libya Observer", url: "https://www.libyaobserver.ly/feed", language: "en" },
+      { outlet: "AllAfrica Libya", url: "https://allafrica.com/tools/headlines/rdf/libya/headlines.rdf", language: "en" },
     ],
   },
 
   Sudan: {
     primary: {
-      outlet: "Al Jazeera",
-      url: "https://www.aljazeera.com/xml/rss/all.xml",
+      outlet: "AllAfrica Sudan",
+      url: "https://allafrica.com/tools/headlines/rdf/sudan/headlines.rdf",
       language: "en",
     },
     backups: [
-      { outlet: "BBC Africa", url: "https://feeds.bbci.co.uk/news/world/africa/rss.xml", language: "en" },
-      { outlet: "AllAfrica", url: "https://allafrica.com/tools/headlines/rdf/latest/headlines.rdf", language: "en" },
+      { outlet: "Sudan Tribune", url: "https://sudantribune.com/feed/", language: "en" },
+      { outlet: "Al Jazeera", url: "https://www.aljazeera.com/xml/rss/all.xml", language: "en" },
     ],
   },
 
@@ -971,37 +971,37 @@ export const NEWS_SOURCE_MAP: Record<string, CountryNewsSources> = {
 
   PapuaNewGuinea: {
     primary: {
-      outlet: "RNZ Pacific",
-      url: "https://www.rnz.co.nz/rss/pacific.xml",
+      outlet: "Post Courier PNG",
+      url: "https://www.postcourier.com.pg/feed/",
       language: "en",
     },
     backups: [
+      { outlet: "RNZ Pacific", url: "https://www.rnz.co.nz/rss/pacific.xml", language: "en" },
       { outlet: "ABC News Australia", url: "https://www.abc.net.au/news/feed/51120/rss.xml", language: "en" },
-      { outlet: "Al Jazeera", url: "https://www.aljazeera.com/xml/rss/all.xml", language: "en" },
     ],
   },
 
   Fiji: {
     primary: {
-      outlet: "RNZ Pacific",
-      url: "https://www.rnz.co.nz/rss/pacific.xml",
+      outlet: "FBC News Fiji",
+      url: "https://www.fbcnews.com.fj/feed/",
       language: "en",
     },
     backups: [
-      { outlet: "ABC News Australia", url: "https://www.abc.net.au/news/feed/51120/rss.xml", language: "en" },
-      { outlet: "Al Jazeera", url: "https://www.aljazeera.com/xml/rss/all.xml", language: "en" },
+      { outlet: "Fiji Times", url: "https://www.fijitimes.com/feed/", language: "en" },
+      { outlet: "RNZ Pacific", url: "https://www.rnz.co.nz/rss/pacific.xml", language: "en" },
     ],
   },
 
   SolomonIslands: {
     primary: {
-      outlet: "RNZ Pacific",
-      url: "https://www.rnz.co.nz/rss/pacific.xml",
+      outlet: "Solomon Star News",
+      url: "https://www.solomonstarnews.com/feed/",
       language: "en",
     },
     backups: [
+      { outlet: "RNZ Pacific", url: "https://www.rnz.co.nz/rss/pacific.xml", language: "en" },
       { outlet: "ABC News Australia", url: "https://www.abc.net.au/news/feed/51120/rss.xml", language: "en" },
-      { outlet: "Al Jazeera", url: "https://www.aljazeera.com/xml/rss/all.xml", language: "en" },
     ],
   },
 
